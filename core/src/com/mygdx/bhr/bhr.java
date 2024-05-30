@@ -3,8 +3,6 @@ package com.mygdx.bhr;
 import java.util.Iterator;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -16,20 +14,18 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 
 public class bhr extends ApplicationAdapter {
-	private Texture dropletImage;
-	private Texture bucketImage;
-	private Sound dropSound;
-	private Music rainMusic;
+	private Texture enemyImage;
+	private Texture heroImage;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
-	private Heroes bucket;
-	private Array<Enemies> raindrops;
-	private long lastDropTime;
+	private Heroes hero;
+	private Array<Enemies> enemies;
+	private long lastSpawnTime;
 
 	private final int WORLD_WIDTH = 1600;
 	private final int WORLD_HEIGHT = 960;
 
-	private void spawnRaindrop() {
+	private void spawnEnemies() {
 		Polygon raindropPolygon;
 		boolean isOverlapping;
 
@@ -37,7 +33,7 @@ public class bhr extends ApplicationAdapter {
 			raindropPolygon = createPolygon(MathUtils.random(0, WORLD_WIDTH - 64), MathUtils.random(0, WORLD_HEIGHT - 64), 64, 64);
 			isOverlapping = false;
 
-			for (Enemies raindrop : raindrops) {
+			for (Enemies raindrop : enemies) {
 				if (Intersector.overlapConvexPolygons(raindropPolygon, raindrop.polygon)) {
 					isOverlapping = true;
 					break;
@@ -45,8 +41,8 @@ public class bhr extends ApplicationAdapter {
 			}
 		} while (isOverlapping);
 
-		raindrops.add(new Enemies(raindropPolygon, WORLD_WIDTH, WORLD_HEIGHT));
-		lastDropTime = TimeUtils.nanoTime();
+		enemies.add(new Enemies(raindropPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+		lastSpawnTime = TimeUtils.nanoTime();
 	}
 
 	private Polygon createPolygon(float x, float y, float width, float height) {
@@ -91,45 +87,45 @@ public class bhr extends ApplicationAdapter {
 
 	@Override
 	public void create() {
-		dropletImage = new Texture(Gdx.files.internal("enemyTest1.png"));
-		dropletImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear); // Optional smoothing
+		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
+		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear); // Optional smoothing
 
-		bucketImage = new Texture(Gdx.files.internal("charaTest1.png"));
-		bucketImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear); // Optional smoothing
+		heroImage = new Texture(Gdx.files.internal("charaTest1.png"));
+		heroImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear); // Optional smoothing
 
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
 		batch = new SpriteBatch();
 
-		bucket = new Heroes(WORLD_WIDTH, WORLD_HEIGHT);
-		raindrops = new Array<>();
-		spawnRaindrop();
+		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT);
+		enemies = new Array<>();
+		spawnEnemies();
 	}
 
 	@Override
 	public void render() {
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 
-		bucket.update(Gdx.graphics.getDeltaTime());
+		hero.update(Gdx.graphics.getDeltaTime());
 
-		camera.position.set(bucket.getX() + 32, bucket.getY() + 32, 0);
+		camera.position.set(hero.getX() + 32, hero.getY() + 32, 0);
 		camera.update();
 
 		batch.setProjectionMatrix(camera.combined);
 
 		batch.begin();
-		drawWrapped(bucketImage, bucket.polygon);
-		for (Enemies raindrop : raindrops) {
-			drawWrapped(dropletImage, raindrop.polygon);
+		drawWrapped(heroImage, hero.polygon);
+		for (Enemies enemy : enemies) {
+			drawWrapped(enemyImage, enemy.polygon);
 		}
 		batch.end();
 
-		if (TimeUtils.nanoTime() - lastDropTime > 1000000000) spawnRaindrop();
+		if (TimeUtils.nanoTime() - lastSpawnTime > 1000000000) spawnEnemies();
 
-		for (Iterator<Enemies> iter = raindrops.iterator(); iter.hasNext(); ) {
-			Enemies raindrop = iter.next();
-			raindrop.update(Gdx.graphics.getDeltaTime(), bucket.polygon);
-			if (Intersector.overlapConvexPolygons(raindrop.polygon, bucket.polygon)) {
+		for (Iterator<Enemies> iter = enemies.iterator(); iter.hasNext(); ) {
+			Enemies enemy = iter.next();
+			enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
+			if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
 				iter.remove();
 			}
 		}
@@ -137,10 +133,8 @@ public class bhr extends ApplicationAdapter {
 
 	@Override
 	public void dispose() {
-		dropletImage.dispose();
-		bucketImage.dispose();
-		dropSound.dispose();
-		rainMusic.dispose();
+		enemyImage.dispose();
+		heroImage.dispose();
 		batch.dispose();
 	}
 }
