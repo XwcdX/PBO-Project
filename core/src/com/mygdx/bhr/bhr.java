@@ -1,10 +1,14 @@
 package com.mygdx.bhr;
 
 import java.util.Iterator;
+import java.util.Random;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
@@ -14,7 +18,9 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 
 public class bhr extends ApplicationAdapter {
+	private BitmapFont HP;
 	private Texture enemyImage;
+	private Sound enemyS;
 	private Texture heroImage;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
@@ -26,22 +32,21 @@ public class bhr extends ApplicationAdapter {
 	private final int WORLD_HEIGHT = 960;
 
 	private void spawnEnemies() {
-		Polygon raindropPolygon;
+		Polygon enemyPolygon;
 		boolean isOverlapping;
 
 		do {
-			raindropPolygon = createPolygon(MathUtils.random(0, WORLD_WIDTH - 64), MathUtils.random(0, WORLD_HEIGHT - 64), 64, 64);
+			enemyPolygon = createPolygon(MathUtils.random(0, WORLD_WIDTH - 64), MathUtils.random(0, WORLD_HEIGHT - 64), 64, 64);
 			isOverlapping = false;
 
-			for (Enemies raindrop : enemies) {
-				if (Intersector.overlapConvexPolygons(raindropPolygon, raindrop.polygon)) {
+			for (Enemies enemy : enemies) {
+				if (Intersector.overlapConvexPolygons(enemyPolygon, enemy.polygon)) {
 					isOverlapping = true;
 					break;
 				}
 			}
 		} while (isOverlapping);
-
-		enemies.add(new Enemies(raindropPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+		enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 		lastSpawnTime = TimeUtils.nanoTime();
 	}
 
@@ -88,10 +93,12 @@ public class bhr extends ApplicationAdapter {
 	@Override
 	public void create() {
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
-		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear); // Optional smoothing
+		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
 		heroImage = new Texture(Gdx.files.internal("charaTest1.png"));
-		heroImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear); // Optional smoothing
+		heroImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+		enemyS = Gdx.audio.newSound(Gdx.files.internal("attack.wav"));
 
 		camera = new OrthographicCamera();
 		camera.setToOrtho(false, 800, 480);
@@ -100,6 +107,10 @@ public class bhr extends ApplicationAdapter {
 		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT);
 		enemies = new Array<>();
 		spawnEnemies();
+
+		HP = new BitmapFont();
+		HP.getData().setScale(1);
+		HP.setColor(1, 1, 1, 1);
 	}
 
 	@Override
@@ -118,7 +129,9 @@ public class bhr extends ApplicationAdapter {
 		for (Enemies enemy : enemies) {
 			drawWrapped(enemyImage, enemy.polygon);
 		}
+		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
 		batch.end();
+
 
 		if (TimeUtils.nanoTime() - lastSpawnTime > 1000000000) spawnEnemies();
 
@@ -126,6 +139,11 @@ public class bhr extends ApplicationAdapter {
 			Enemies enemy = iter.next();
 			enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
 			if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
+					enemyS.play();
+					hero.takeDamage(25);
+					if (!hero.isAlive()) {
+						dispose();
+					}
 				iter.remove();
 			}
 		}
@@ -135,6 +153,8 @@ public class bhr extends ApplicationAdapter {
 	public void dispose() {
 		enemyImage.dispose();
 		heroImage.dispose();
+		enemyS.dispose();
 		batch.dispose();
+		HP.dispose();
 	}
 }

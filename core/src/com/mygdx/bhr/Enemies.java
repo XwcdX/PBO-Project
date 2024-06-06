@@ -16,8 +16,8 @@ public class Enemies {
         this.WORLD_HEIGHT = worldHeight;
     }
 
-    public void update(float deltaTime, Polygon bucket) {
-        Vector2 direction = shortestDirection(polygon, bucket);
+    public void update(float deltaTime, Polygon enemies) {
+        Vector2 direction = shortestDirection(polygon, enemies);
         direction.nor();
 
         velocity.set(direction.scl(150));
@@ -27,7 +27,7 @@ public class Enemies {
         wrapAroundWorld();
     }
 
-    private Vector2 shortestDirection(Polygon from, Polygon to) {
+    protected Vector2 shortestDirection(Polygon from, Polygon to) {
         Vector2 fromCenter = new Vector2(from.getBoundingRectangle().x + from.getBoundingRectangle().width / 2, from.getBoundingRectangle().y + from.getBoundingRectangle().height / 2);
         Vector2 toCenter = new Vector2(to.getBoundingRectangle().x + to.getBoundingRectangle().width / 2, to.getBoundingRectangle().y + to.getBoundingRectangle().height / 2);
 
@@ -54,7 +54,7 @@ public class Enemies {
         return direction;
     }
 
-    private void wrapAroundWorld() {
+    protected void wrapAroundWorld() {
         float[] vertices = polygon.getTransformedVertices();
         float x = vertices[0];
         float y = vertices[1];

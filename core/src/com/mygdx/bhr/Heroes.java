@@ -8,11 +8,14 @@ public class Heroes {
     Polygon polygon;
     private final int WORLD_WIDTH;
     private final int WORLD_HEIGHT;
+    private int hp;
+    private int point;
 
     public Heroes(int worldWidth, int worldHeight) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
         this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 32, (float) WORLD_HEIGHT / 2 - 32, 64, 64);
+        this.hp = 100;
     }
 
     private Polygon createPolygon(float x, float y, float width, float height) {
@@ -44,5 +47,25 @@ public class Heroes {
 
     public float getY() {
         return polygon.getTransformedVertices()[1];
+    }
+
+    public void takeDamage(int damage) {
+        hp -= damage;
+    }
+
+    public int getHP() {
+        return hp;
+    }
+
+    public boolean isAlive() {
+        return hp > 0;
+    }
+
+    public void claimpoint(int point) {
+        this.point += point;
+    }
+
+    public int getpoint() {
+        return point;
     }
 }
