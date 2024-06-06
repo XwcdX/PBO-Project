@@ -1,8 +1,6 @@
 package com.mygdx.bhr;
 
 import java.util.Iterator;
-import java.util.Random;
-
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
@@ -22,6 +20,7 @@ public class bhr extends ApplicationAdapter {
 	private Texture enemyImage;
 	private Sound enemyS;
 	private Texture heroImage;
+	private Texture bulletImage;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
 	private Heroes hero;
@@ -34,7 +33,6 @@ public class bhr extends ApplicationAdapter {
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		boolean isOverlapping;
-
 		do {
 			enemyPolygon = createPolygon(MathUtils.random(0, WORLD_WIDTH - 64), MathUtils.random(0, WORLD_HEIGHT - 64), 64, 64);
 			isOverlapping = false;
@@ -95,6 +93,9 @@ public class bhr extends ApplicationAdapter {
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
 		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
+		bulletImage = new Texture(Gdx.files.internal("fireballtest1.png"));
+		bulletImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
 		heroImage = new Texture(Gdx.files.internal("charaTest1.png"));
 		heroImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
@@ -129,9 +130,20 @@ public class bhr extends ApplicationAdapter {
 		for (Enemies enemy : enemies) {
 			drawWrapped(enemyImage, enemy.polygon);
 		}
+		for (Bullet bullet : hero.getBullets()) {
+			float rotation = bullet.getRotation() - 180;
+			batch.draw(bulletImage,
+					bullet.circle.x - bullet.circle.radius, bullet.circle.y - bullet.circle.radius,
+					bullet.circle.radius, bullet.circle.radius,
+					bulletImage.getWidth(), bulletImage.getHeight(),
+					1f, 1f,
+					rotation,
+					0, 0,
+					bulletImage.getWidth(), bulletImage.getHeight(),
+					false, false);
+		}
 		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
 		batch.end();
-
 
 		if (TimeUtils.nanoTime() - lastSpawnTime > 1000000000) spawnEnemies();
 
@@ -139,19 +151,43 @@ public class bhr extends ApplicationAdapter {
 			Enemies enemy = iter.next();
 			enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
 			if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
-					enemyS.play();
-					hero.takeDamage(25);
-					if (!hero.isAlive()) {
-						dispose();
-					}
+				enemyS.play();
+				hero.takeDamage(10);
+				if (!hero.isAlive()) {
+					dispose();
+				}
 				iter.remove();
+			}
+		}
+
+		// Check collisions between bullets and enemies
+		for (Iterator<Bullet> iterBullet = hero.getBullets().iterator(); iterBullet.hasNext(); ) {
+			Bullet bullet = iterBullet.next();
+			for (Iterator<Enemies> iterEnemy = enemies.iterator(); iterEnemy.hasNext(); ) {
+				Enemies enemy = iterEnemy.next();
+				if (Intersector.overlaps(bullet.circle, enemy.polygon.getBoundingRectangle())) {
+					enemy.takeDamage(50);
+					if (!enemy.isAlive()) {
+						iterEnemy.remove();
+					}
+					iterBullet.remove();
+					break;
+				}
+			}
+			bullet.update(Gdx.graphics.getDeltaTime()); // Update the bullet after collision check
+			if (bullet.hasExceededRange()) {
+				iterBullet.remove(); // Remove bullets that exceed range
 			}
 		}
 	}
 
+
+
+
 	@Override
 	public void dispose() {
 		enemyImage.dispose();
+		bulletImage.dispose();
 		heroImage.dispose();
 		enemyS.dispose();
 		batch.dispose();

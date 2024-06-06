@@ -3,19 +3,32 @@ package com.mygdx.bhr;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.TimeUtils;
 
-public class Heroes {
+import java.util.Iterator;
+
+public class Heroes implements hasHP, canShoot {
     Polygon polygon;
     private final int WORLD_WIDTH;
     private final int WORLD_HEIGHT;
     private int hp;
-    private int point;
+    private Array<Bullet> bullets;
+    private Vector2 direction;
+    private Vector2 lastDirection;
+    private long lastAttackTime;
+    private final long attackInterval = 500000000; // Auto attack every 0.5 seconds (500,000,000 nanoseconds)
 
     public Heroes(int worldWidth, int worldHeight) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
         this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 32, (float) WORLD_HEIGHT / 2 - 32, 64, 64);
         this.hp = 100;
+        this.bullets = new Array<>();
+        this.direction = new Vector2(0, 0);
+        this.lastDirection = new Vector2(1, 0); // Default direction is to the right
+        this.lastAttackTime = TimeUtils.nanoTime();
     }
 
     private Polygon createPolygon(float x, float y, float width, float height) {
@@ -26,10 +39,25 @@ public class Heroes {
     }
 
     public void update(float deltaTime) {
-        if (Gdx.input.isKeyPressed(Input.Keys.A)) polygon.translate(-200 * deltaTime, 0);
-        if (Gdx.input.isKeyPressed(Input.Keys.D)) polygon.translate(200 * deltaTime, 0);
-        if (Gdx.input.isKeyPressed(Input.Keys.S)) polygon.translate(0, -200 * deltaTime);
-        if (Gdx.input.isKeyPressed(Input.Keys.W)) polygon.translate(0, 200 * deltaTime);
+        direction.set(0, 0);
+
+        if (Gdx.input.isKeyPressed(Input.Keys.A)) direction.add(-1, 0);
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) direction.add(1, 0);
+        if (Gdx.input.isKeyPressed(Input.Keys.S)) direction.add(0, -1);
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) direction.add(0, 1);
+
+        if (!direction.isZero()) {
+            lastDirection.set(direction).nor(); // Update last direction if there's movement
+        }
+
+        direction.nor(); // Normalize the direction vector to ensure consistent speed
+
+        polygon.translate(direction.x * 300 * deltaTime, direction.y * 300 * deltaTime);
+
+        if (TimeUtils.nanoTime() - lastAttackTime > attackInterval) {
+            shoot();
+            lastAttackTime = TimeUtils.nanoTime();
+        }
 
         float[] vertices = polygon.getTransformedVertices();
         float x = vertices[0];
@@ -39,6 +67,14 @@ public class Heroes {
         if (x >= WORLD_WIDTH) polygon.translate(-WORLD_WIDTH, 0);
         if (y < 0) polygon.translate(0, WORLD_HEIGHT);
         if (y >= WORLD_HEIGHT) polygon.translate(0, -WORLD_HEIGHT);
+
+        for (Iterator<Bullet> iter = bullets.iterator(); iter.hasNext(); ) {
+            Bullet bullet = iter.next();
+            bullet.update(deltaTime);
+            if (bullet.hasExceededRange()) {
+                iter.remove();
+            }
+        }
     }
 
     public float getX() {
@@ -49,23 +85,31 @@ public class Heroes {
         return polygon.getTransformedVertices()[1];
     }
 
+    @Override
     public void takeDamage(int damage) {
         hp -= damage;
     }
 
+    @Override
     public int getHP() {
         return hp;
     }
 
+    @Override
     public boolean isAlive() {
         return hp > 0;
     }
 
-    public void claimpoint(int point) {
-        this.point += point;
+    @Override
+    public void shoot() {
+        float[] vertices = polygon.getTransformedVertices();
+        float x = vertices[0] + polygon.getBoundingRectangle().width / 2;
+        float y = vertices[1] + polygon.getBoundingRectangle().height / 2;
+        bullets.add(new Bullet(x, y, new Vector2(lastDirection), WORLD_WIDTH, WORLD_HEIGHT));
     }
 
-    public int getpoint() {
-        return point;
+    @Override
+    public Array<Bullet> getBullets() {
+        return bullets;
     }
 }

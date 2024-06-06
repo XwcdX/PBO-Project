@@ -3,24 +3,26 @@ package com.mygdx.bhr;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 
-public class Enemies {
+public class Enemies implements hasHP {
     Polygon polygon;
     Vector2 velocity;
     private final int WORLD_WIDTH;
     private final int WORLD_HEIGHT;
+    private int hp;
 
     public Enemies(Polygon polygon, int worldWidth, int worldHeight) {
         this.polygon = polygon;
         this.velocity = new Vector2();
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
+        this.hp = 100;
     }
 
-    public void update(float deltaTime, Polygon enemies) {
-        Vector2 direction = shortestDirection(polygon, enemies);
+    public void update(float deltaTime, Polygon heroPolygon) {
+        Vector2 direction = shortestDirection(polygon, heroPolygon);
         direction.nor();
 
-        velocity.set(direction.scl(150));
+        velocity.set(direction.scl(100));
 
         polygon.translate(velocity.x * deltaTime, velocity.y * deltaTime);
 
@@ -63,5 +65,20 @@ public class Enemies {
         if (x >= WORLD_WIDTH) polygon.translate(-WORLD_WIDTH, 0);
         if (y < 0) polygon.translate(0, WORLD_HEIGHT);
         if (y >= WORLD_HEIGHT) polygon.translate(0, -WORLD_HEIGHT);
+    }
+
+    @Override
+    public boolean isAlive() {
+        return hp > 0;
+    }
+
+    @Override
+    public int getHP() {
+        return hp;
+    }
+
+    @Override
+    public void takeDamage(int damage) {
+        hp -= damage;
     }
 }
