@@ -6,15 +6,16 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
-
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
 	private Texture enemyImage;
@@ -29,7 +30,14 @@ public class bhr extends ApplicationAdapter {
 
 	private final int WORLD_WIDTH = 1600;
 	private final int WORLD_HEIGHT = 960;
+	// Adding gems
+	private Texture redImg1,redImg2,redImg3,redImg4;
+	private Texture blueImg1,blueImg2,blueImg3,blueImg4;
+	private Texture greenImg1,greenImg2,greenImg3,greenImg4;
+	public Animation<TextureRegion> crystalAnimation;
+	public Array<Crystal>crystals;
 
+	///
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		boolean isOverlapping;
@@ -107,8 +115,27 @@ public class bhr extends ApplicationAdapter {
 
 		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT);
 		enemies = new Array<>();
+		crystals = new Array<>();
 		spawnEnemies();
+		/*
+		Make Texture Image
+		 */
+		redImg1 =  new Texture(Gdx.files.internal("Red/red_crystal_0000.png"));
+		redImg2 =  new Texture(Gdx.files.internal("Red/red_crystal_0001.png"));
+		redImg3 =  new Texture(Gdx.files.internal("Red/red_crystal_0002.png"));
+		redImg4 =  new Texture(Gdx.files.internal("Red/red_crystal_0003.png"));
+		blueImg1  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0000.png"));
+		blueImg2  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0001.png"));
+		blueImg3  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0002.png"));
+		blueImg4  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0003.png"));
+		Array<TextureRegion> frames = new Array<>();
+		frames.add(new TextureRegion(redImg1));
+		frames.add(new TextureRegion(redImg2));
+		frames.add(new TextureRegion(redImg3));
+		frames.add(new TextureRegion(redImg4));
 
+		// Create the animation (0.25f is the duration of each frame)
+		crystalAnimation = new Animation<>(0.25f, frames, Animation.PlayMode.LOOP);
 		HP = new BitmapFont();
 		HP.getData().setScale(1);
 		HP.setColor(1, 1, 1, 1);
@@ -142,6 +169,15 @@ public class bhr extends ApplicationAdapter {
 					bulletImage.getWidth(), bulletImage.getHeight(),
 					false, false);
 		}
+
+		for (Crystal crystal : crystals) {
+			crystal.updateStateTime(Gdx.graphics.getDeltaTime());
+			if (!crystal.collected) {
+				Texture texture = crystal.getTexture();
+				drawWrapped(texture, crystal.polygon);
+			}
+		}
+
 		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
 		batch.end();
 
@@ -168,6 +204,7 @@ public class bhr extends ApplicationAdapter {
 				if (Intersector.overlaps(bullet.circle, enemy.polygon.getBoundingRectangle())) {
 					enemy.takeDamage(50);
 					if (!enemy.isAlive()) {
+						crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 32, 32,crystalAnimation));
 						iterEnemy.remove();
 					}
 					iterBullet.remove();
@@ -177,6 +214,12 @@ public class bhr extends ApplicationAdapter {
 			bullet.update(Gdx.graphics.getDeltaTime()); // Update the bullet after collision check
 			if (bullet.hasExceededRange()) {
 				iterBullet.remove(); // Remove bullets that exceed range
+			}
+		}
+		for (Crystal crystal : crystals) {
+			if (!crystal.collected && Intersector.overlapConvexPolygons(crystal.polygon, hero.polygon)) {
+				crystal.collected = true;
+				// Perform actions on crystal collection, e.g., increase score or power-up
 			}
 		}
 	}
