@@ -32,8 +32,8 @@ public class bhr extends ApplicationAdapter {
 	private final int WORLD_HEIGHT = 960;
 	// Adding gems
 	private Texture redImg1,redImg2,redImg3,redImg4;
-	private Texture blueImg1,blueImg2,blueImg3,blueImg4;
-	private Texture greenImg1,greenImg2,greenImg3,greenImg4;
+//	private Texture blueImg1,blueImg2,blueImg3,blueImg4;
+//	private Texture greenImg1,greenImg2,greenImg3,greenImg4;
 	public Animation<TextureRegion> crystalAnimation;
 	public Array<Crystal>crystals;
 
@@ -124,10 +124,10 @@ public class bhr extends ApplicationAdapter {
 		redImg2 =  new Texture(Gdx.files.internal("Red/red_crystal_0001.png"));
 		redImg3 =  new Texture(Gdx.files.internal("Red/red_crystal_0002.png"));
 		redImg4 =  new Texture(Gdx.files.internal("Red/red_crystal_0003.png"));
-		blueImg1  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0000.png"));
-		blueImg2  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0001.png"));
-		blueImg3  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0002.png"));
-		blueImg4  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0003.png"));
+//		blueImg1  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0000.png"));
+//		blueImg2  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0001.png"));
+//		blueImg3  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0002.png"));
+//		blueImg4  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0003.png"));
 		Array<TextureRegion> frames = new Array<>();
 		frames.add(new TextureRegion(redImg1));
 		frames.add(new TextureRegion(redImg2));
