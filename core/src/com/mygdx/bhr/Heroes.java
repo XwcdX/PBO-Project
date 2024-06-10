@@ -14,11 +14,10 @@ public class Heroes implements hasHP, canShoot {
     private final int WORLD_WIDTH;
     private final int WORLD_HEIGHT;
     private int hp;
-    private Array<Bullet> bullets;
-    private Vector2 direction;
-    private Vector2 lastDirection;
+    private final Array<Bullet> bullets;
+    private final Vector2 direction;
+    private final Vector2 lastDirection;
     private long lastAttackTime;
-    private final long attackInterval = 500000000; // Auto attack every 0.5 seconds (500,000,000 nanoseconds)
 
     public Heroes(int worldWidth, int worldHeight) {
         this.WORLD_WIDTH = worldWidth;
@@ -54,6 +53,8 @@ public class Heroes implements hasHP, canShoot {
 
         polygon.translate(direction.x * 300 * deltaTime, direction.y * 300 * deltaTime);
 
+        // Auto attack every 0.5 seconds (500,000,000 nanoseconds)
+        long attackInterval = 500000000;
         if (TimeUtils.nanoTime() - lastAttackTime > attackInterval) {
             shoot();
             lastAttackTime = TimeUtils.nanoTime();
