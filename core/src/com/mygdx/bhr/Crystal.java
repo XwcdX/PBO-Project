@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Polygon;
 
+import java.util.Random;
+
 public class Crystal {
     public Polygon polygon;
     public boolean collected;
@@ -13,7 +15,10 @@ public class Crystal {
     public Crystal(float x,float y,float width,float height,Animation<TextureRegion> animation){
         float[] vertex = {0,0,width,0,width,height,0,height};
         polygon = new Polygon(vertex);
-        polygon.setPosition(x,y);
+        Random rand = new Random();
+        int randx = rand.nextInt(-15,15);
+        int randy = rand.nextInt(-15,15);
+        polygon.setPosition(x+randx,y+randy);
         collected = false;
         this.animation = animation;
     }
