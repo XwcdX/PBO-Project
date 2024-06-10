@@ -246,7 +246,7 @@ public class bhr extends ApplicationAdapter {
 				enemyS.play();
 				hero.takeDamage(10);
 				if (!hero.isAlive()) {
-					dispose();
+//					dispose();
 				}
 				iter.remove();
 			}
