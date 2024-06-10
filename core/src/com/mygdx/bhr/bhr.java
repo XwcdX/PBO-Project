@@ -16,6 +16,8 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import org.w3c.dom.Text;
+
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
 	private Texture enemyImage;
@@ -32,9 +34,15 @@ public class bhr extends ApplicationAdapter {
 	private final int WORLD_HEIGHT = 960;
 	// Adding gems
 	private Texture redImg1,redImg2,redImg3,redImg4;
-//	private Texture blueImg1,blueImg2,blueImg3,blueImg4;
-//	private Texture greenImg1,greenImg2,greenImg3,greenImg4;
-	public Animation<TextureRegion> crystalAnimation;
+	private Texture blueImg1,blueImg2,blueImg3,blueImg4;
+	private Texture greenImg1,greenImg2,greenImg3,greenImg4;
+	private Texture pinkImg1,pinkImg2,pinkImg3,pinkImg4;
+	private Texture purpleImg1,purpleImg2,purpleImg3,purpleImg4;
+	public Animation<TextureRegion> crystalAnimationRed;
+	public Animation<TextureRegion> crystalAnimationBlue;
+	public Animation<TextureRegion> crystalAnimationPurple;
+	public Animation<TextureRegion> crystalAnimationPink;
+	public Animation<TextureRegion> crystalAnimationGreen;
 	public Array<Crystal>crystals;
 
 	///
@@ -124,18 +132,64 @@ public class bhr extends ApplicationAdapter {
 		redImg2 =  new Texture(Gdx.files.internal("Red/red_crystal_0001.png"));
 		redImg3 =  new Texture(Gdx.files.internal("Red/red_crystal_0002.png"));
 		redImg4 =  new Texture(Gdx.files.internal("Red/red_crystal_0003.png"));
-//		blueImg1  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0000.png"));
-//		blueImg2  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0001.png"));
-//		blueImg3  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0002.png"));
-//		blueImg4  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0003.png"));
-		Array<TextureRegion> frames = new Array<>();
-		frames.add(new TextureRegion(redImg1));
-		frames.add(new TextureRegion(redImg2));
-		frames.add(new TextureRegion(redImg3));
-		frames.add(new TextureRegion(redImg4));
 
+		blueImg1  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0000.png"));
+		blueImg2  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0001.png"));
+		blueImg3  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0002.png"));
+		blueImg4  =  new Texture(Gdx.files.internal("Blue/blue_crystal_0003.png"));
+
+		pinkImg1 =  new Texture(Gdx.files.internal("Pink/pink_crystal_0000.png"));
+		pinkImg2 =  new Texture(Gdx.files.internal("Pink/pink_crystal_0001.png"));
+		pinkImg3 =  new Texture(Gdx.files.internal("Pink/pink_crystal_0002.png"));
+		pinkImg4 =  new Texture(Gdx.files.internal("Pink/pink_crystal_0003.png"));
+
+		greenImg1 = new Texture(Gdx.files.internal("Green/green_crystal_0000.png"));
+		greenImg2 = new Texture(Gdx.files.internal("Green/green_crystal_0001.png"));
+		greenImg3 = new Texture(Gdx.files.internal("Green/green_crystal_0002.png"));
+		greenImg4 = new Texture(Gdx.files.internal("Green/green_crystal_0003.png"));
+
+		purpleImg1 = new Texture(Gdx.files.internal("Purple/purple_crystal_0000.png"));
+		purpleImg2 = new Texture(Gdx.files.internal("Purple/purple_crystal_0001.png"));
+		purpleImg3 = new Texture(Gdx.files.internal("Purple/purple_crystal_0002.png"));
+		purpleImg4 = new Texture(Gdx.files.internal("Purple/purple_crystal_0003.png"));
+
+		Array<TextureRegion> frameRed = new Array<>();
+		frameRed.add(new TextureRegion(redImg1));
+		frameRed.add(new TextureRegion(redImg2));
+		frameRed.add(new TextureRegion(redImg3));
+		frameRed.add(new TextureRegion(redImg4));
+
+		Array<TextureRegion> frameBlue = new Array<>();
+		frameBlue.add(new TextureRegion(blueImg1));
+		frameBlue.add(new TextureRegion(blueImg2));
+		frameBlue.add(new TextureRegion(blueImg3));
+		frameBlue.add(new TextureRegion(blueImg4));
+
+		Array<TextureRegion> frameGreen = new Array<>();
+		frameGreen.add(new TextureRegion(greenImg1));
+		frameGreen.add(new TextureRegion(greenImg2));
+		frameGreen.add(new TextureRegion(greenImg3));
+		frameGreen.add(new TextureRegion(greenImg4));
+
+		Array<TextureRegion> framePurple= new Array<>();
+		framePurple.add(new TextureRegion(purpleImg1));
+		framePurple.add(new TextureRegion(purpleImg2));
+		framePurple.add(new TextureRegion(purpleImg3));
+		framePurple.add(new TextureRegion(purpleImg4));
+
+		Array<TextureRegion> framePink= new Array<>();
+		framePink.add(new TextureRegion(pinkImg1));
+		framePink.add(new TextureRegion(pinkImg2));
+		framePink.add(new TextureRegion(pinkImg3));
+		framePink.add(new TextureRegion(pinkImg4));
 		// Create the animation (0.25f is the duration of each frame)
-		crystalAnimation = new Animation<>(0.25f, frames, Animation.PlayMode.LOOP);
+		crystalAnimationRed = new Animation<>(0.25f, frameRed, Animation.PlayMode.LOOP);
+		crystalAnimationBlue = new Animation<>(0.25f, frameBlue, Animation.PlayMode.LOOP);
+		crystalAnimationGreen = new Animation<>(0.25f, frameGreen, Animation.PlayMode.LOOP);
+		crystalAnimationPurple= new Animation<>(0.25f, framePurple, Animation.PlayMode.LOOP);
+		crystalAnimationPink = new Animation<>(0.25f, framePink, Animation.PlayMode.LOOP);
+
+
 		HP = new BitmapFont();
 		HP.getData().setScale(1);
 		HP.setColor(1, 1, 1, 1);
@@ -204,7 +258,7 @@ public class bhr extends ApplicationAdapter {
 				if (Intersector.overlaps(bullet.circle, enemy.polygon.getBoundingRectangle())) {
 					enemy.takeDamage(50);
 					if (!enemy.isAlive()) {
-						crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 32, 32,crystalAnimation));
+						crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 32, 32,crystalAnimationRed));
 						iterEnemy.remove();
 					}
 					iterBullet.remove();
