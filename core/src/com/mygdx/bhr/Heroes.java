@@ -113,4 +113,7 @@ public class Heroes implements hasHP, canShoot {
     public Array<Bullet> getBullets() {
         return bullets;
     }
+//    public enum State{
+//        //penjelasan kiri kanan dll
+//    }
 }
