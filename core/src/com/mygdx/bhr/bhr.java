@@ -1,6 +1,8 @@
 package com.mygdx.bhr;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 
 import com.badlogic.gdx.ApplicationAdapter;
@@ -18,6 +20,7 @@ import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.Timer;
 import org.w3c.dom.Text;
 
 public class bhr extends ApplicationAdapter {
@@ -46,6 +49,8 @@ public class bhr extends ApplicationAdapter {
 	public Animation<TextureRegion> crystalAnimationPink;
 	public Animation<TextureRegion> crystalAnimationGreen;
 	public Array<Crystal>crystals;
+
+	private Map<Enemies, Float> collisionTimes;
 
 	///
 	private void spawnEnemies() {
@@ -195,6 +200,8 @@ public class bhr extends ApplicationAdapter {
 		HP = new BitmapFont();
 		HP.getData().setScale(1);
 		HP.setColor(1, 1, 1, 1);
+
+		collisionTimes = new HashMap<>();
 	}
 
 	@Override
@@ -242,13 +249,25 @@ public class bhr extends ApplicationAdapter {
 		for (Iterator<Enemies> iter = enemies.iterator(); iter.hasNext(); ) {
 			Enemies enemy = iter.next();
 			enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
+
 			if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
-				enemyS.play();
-				hero.takeDamage(10);
-				if (!hero.isAlive()) {
-//					dispose();
+				if (!collisionTimes.containsKey(enemy)) {
+					collisionTimes.put(enemy, 0f);
 				}
-				iter.remove();
+				float collisionTime = collisionTimes.get(enemy) + Gdx.graphics.getDeltaTime();
+				collisionTimes.put(enemy, collisionTime);
+
+				if (collisionTime >= 2f) {
+					enemyS.play();
+					hero.takeDamage(10);
+					if (!hero.isAlive()) {
+						dispose();
+					}
+					iter.remove();
+					collisionTimes.remove(enemy);
+				}
+			} else {
+				collisionTimes.remove(enemy);
 			}
 		}
 
