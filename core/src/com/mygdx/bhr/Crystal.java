@@ -12,7 +12,8 @@ public class Crystal {
     public boolean collected;
     public Animation<TextureRegion>animation;
     private float stateTime;
-    public Crystal(float x,float y,float width,float height,Animation<TextureRegion> animation){
+    int size;
+    public Crystal(float x,float y,float width,float height,Animation<TextureRegion> animation,int size){
         float[] vertex = {0,0,width,0,width,height,0,height};
         polygon = new Polygon(vertex);
         Random rand = new Random();
@@ -20,6 +21,7 @@ public class Crystal {
         int randy = rand.nextInt(-15,15);
         polygon.setPosition(x+randx,y+randy);
         collected = false;
+        this.size = size;
         this.animation = animation;
     }
     public void update(float deltaTime) {
@@ -33,5 +35,9 @@ public class Crystal {
     }
     public void updateStateTime(float delta) {
         stateTime += delta;
+    }
+
+    public int getSize(){
+        return size;
     }
 }

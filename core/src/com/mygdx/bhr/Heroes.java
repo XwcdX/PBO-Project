@@ -2,6 +2,7 @@ package com.mygdx.bhr;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
@@ -9,25 +10,33 @@ import com.badlogic.gdx.utils.TimeUtils;
 
 import java.util.Iterator;
 
-public class Heroes implements hasHP, canShoot {
+public class Heroes implements hasHP, canShoot, hasExp {
     Polygon polygon;
     private final int WORLD_WIDTH;
     private final int WORLD_HEIGHT;
     private int hp;
+    private int exp;
     private final Array<Bullet> bullets;
     private final Vector2 direction;
     private final Vector2 lastDirection;
     private long lastAttackTime;
-
+    public int  ExpNeeded;
+    private int level;
+    private Sound lvlUps;
+    public boolean checkKondisi = false;
     public Heroes(int worldWidth, int worldHeight) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
         this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 32, (float) WORLD_HEIGHT / 2 - 32, 64, 64);
         this.hp = 100;
+        this.exp = 0;
+        this.level = 1;
+        this.ExpNeeded = 200;
         this.bullets = new Array<>();
         this.direction = new Vector2(0, 0);
         this.lastDirection = new Vector2(1, 0); // Default direction is to the right
         this.lastAttackTime = TimeUtils.nanoTime();
+        this.lvlUps =  Gdx.audio.newSound(Gdx.files.internal("Audio/achievement.wav"));
     }
 
     private Polygon createPolygon(float x, float y, float width, float height) {
@@ -113,7 +122,30 @@ public class Heroes implements hasHP, canShoot {
     public Array<Bullet> getBullets() {
         return bullets;
     }
-//    public enum State{
-//        //penjelasan kiri kanan dll
-//    }
+
+    @Override
+    public void addExp(int exp) {
+        this.exp += exp;
+    }
+
+    @Override
+    public int getExp() {
+        return exp;
+    }
+
+    public void checkLevelUp(){
+        if (exp >= ExpNeeded) {
+            levelUp();
+        }
+    }
+    private void levelUp() {
+        level++;
+        exp -= ExpNeeded;
+        ExpNeeded += 15;
+        lvlUps.play();
+    }
+
+    public int getLevel() {
+        return level;
+    }
 }

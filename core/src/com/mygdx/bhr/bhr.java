@@ -25,8 +25,12 @@ import org.w3c.dom.Text;
 
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
+	private BitmapFont EXP;
+	private BitmapFont LVL;
 	private Texture enemyImage;
 	private Sound enemyS;
+	private Sound crystalCollectS;
+	private Sound lvlUps;
 	private Texture heroImage;
 	private Texture bulletImage;
 	private SpriteBatch batch;
@@ -196,8 +200,17 @@ public class bhr extends ApplicationAdapter {
 		crystalAnimationPurple= new Animation<>(0.25f, framePurple, Animation.PlayMode.LOOP);
 		crystalAnimationPink = new Animation<>(0.25f, framePink, Animation.PlayMode.LOOP);
 
-
+		//Audio Claim Crystal
+		crystalCollectS = Gdx.audio.newSound(Gdx.files.internal("Audio/object_collect.wav"));
+		//Audio Exp Lvl Up
+//		lvlUps = Gdx.audio.newSound(Gdx.files.internal("Audio/achievement.wav"));
 		HP = new BitmapFont();
+		EXP = new BitmapFont();
+		LVL = new BitmapFont();
+		LVL.getData().setScale(1);
+		LVL.setColor(1,1,1,1);
+		EXP.getData().setScale(1);
+		EXP.setColor(1, 1, 1, 1);
 		HP.getData().setScale(1);
 		HP.setColor(1, 1, 1, 1);
 
@@ -242,6 +255,8 @@ public class bhr extends ApplicationAdapter {
 		}
 
 		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
+		EXP.draw(batch, "EXP: " + hero.getExp(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 30);
+		LVL.draw(batch,"LVL: "+hero.getLevel(),camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
 		batch.end();
 
 		if (TimeUtils.nanoTime() - lastSpawnTime > 1000000000) spawnEnemies();
@@ -291,19 +306,19 @@ public class bhr extends ApplicationAdapter {
 						exp%=5;
 						int byk1 = exp;
 						for (int i=0;i<byk50;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 52, 52,crystalAnimationPink));
+							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 52, 52,crystalAnimationPink,52));
 						}
 						for (int i=0;i<byk20;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 46, 46,crystalAnimationPurple));
+							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 46, 46,crystalAnimationPurple,46));
 						}
 						for (int i=0;i<byk10;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 40, 40,crystalAnimationRed));
+							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 40, 40,crystalAnimationRed,40));
 						}
 						for (int i=0;i<byk5;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 34, 34,crystalAnimationBlue));
+							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 34, 34,crystalAnimationBlue,34));
 						}
 						for (int i=0;i<byk1;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 28, 28,crystalAnimationGreen));
+							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 28, 28,crystalAnimationGreen,28));
 						}
 						iterEnemy.remove();
 					}
@@ -319,7 +334,31 @@ public class bhr extends ApplicationAdapter {
 		for (Crystal crystal : crystals) {
 			if (!crystal.collected && Intersector.overlapConvexPolygons(crystal.polygon, hero.polygon)) {
 				crystal.collected = true;
-				// Perform actions on crystal collection, e.g., increase score or power-up
+				crystalCollectS.play();
+				switch (crystal.getSize()) {
+					case 52:
+						hero.addExp(50);
+						hero.checkLevelUp();
+						break;
+					case 46:
+						hero.addExp(20);
+						hero.checkLevelUp();
+						break;
+					case 40:
+						hero.addExp(10);
+						hero.checkLevelUp();
+						break;
+					case 34:
+						hero.addExp(5);
+						hero.checkLevelUp();
+						break;
+					case 28:
+						hero.addExp(1);
+						hero.checkLevelUp();
+						break;
+					default:
+						break;
+				}
 			}
 		}
 	}
