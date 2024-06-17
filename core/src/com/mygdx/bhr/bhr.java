@@ -14,6 +14,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
@@ -39,8 +40,8 @@ public class bhr extends ApplicationAdapter {
 	private Array<Enemies> enemies;
 	private long lastSpawnTime;
 
-	private final int WORLD_WIDTH = 1600;
-	private final int WORLD_HEIGHT = 960;
+	private final int WORLD_WIDTH = 3200;
+	private final int WORLD_HEIGHT = 1920;
 	// Adding gems
 	private Texture redImg1,redImg2,redImg3,redImg4;
 	private Texture blueImg1,blueImg2,blueImg3,blueImg4;
@@ -115,6 +116,35 @@ public class bhr extends ApplicationAdapter {
 		}
 	}
 
+	private void spawnCrystals(Enemies enemy) {
+		Random rand = new Random();
+		int exp = rand.nextInt(51);
+		int byk50 = exp / 50;
+		exp %= 50;
+		int byk20 = exp / 20;
+		exp %= 20;
+		int byk10 = exp / 10;
+		exp %= 10;
+		int byk5 = exp / 5;
+		exp %= 5;
+		int byk1 = exp;
+		for (int i = 0; i < byk50; i++) {
+			crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 52, 52, crystalAnimationPink, 52));
+		}
+		for (int i = 0; i < byk20; i++) {
+			crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 46, 46, crystalAnimationPurple, 46));
+		}
+		for (int i = 0; i < byk10; i++) {
+			crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 40, 40, crystalAnimationRed, 40));
+		}
+		for (int i = 0; i < byk5; i++) {
+			crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 34, 34, crystalAnimationBlue, 34));
+		}
+		for (int i = 0; i < byk1; i++) {
+			crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 28, 28, crystalAnimationGreen, 28));
+		}
+	}
+
 	@Override
 	public void create() {
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
@@ -132,7 +162,7 @@ public class bhr extends ApplicationAdapter {
 		camera.setToOrtho(false, 800, 480);
 		batch = new SpriteBatch();
 
-		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT);
+		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT, camera);
 		enemies = new Array<>();
 		crystals = new Array<>();
 		spawnEnemies();
@@ -254,6 +284,8 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 
+		hero.drawSkills(batch);
+
 		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
 		EXP.draw(batch, "EXP: " + hero.getExp(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 30);
 		LVL.draw(batch,"LVL: "+hero.getLevel(),camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
@@ -294,32 +326,7 @@ public class bhr extends ApplicationAdapter {
 				if (Intersector.overlaps(bullet.circle, enemy.polygon.getBoundingRectangle())) {
 					enemy.takeDamage(50);
 					if (!enemy.isAlive()) {
-						Random rand = new Random();
-						int exp = rand.nextInt(51);
-						int byk50 = exp/50;
-						exp%=50;
-						int byk20 = exp/20;
-						exp%=20;
-						int byk10 = exp/10;
-						exp%=10;
-						int byk5 = exp/5;
-						exp%=5;
-						int byk1 = exp;
-						for (int i=0;i<byk50;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 52, 52,crystalAnimationPink,52));
-						}
-						for (int i=0;i<byk20;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 46, 46,crystalAnimationPurple,46));
-						}
-						for (int i=0;i<byk10;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 40, 40,crystalAnimationRed,40));
-						}
-						for (int i=0;i<byk5;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 34, 34,crystalAnimationBlue,34));
-						}
-						for (int i=0;i<byk1;i++){
-							crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 28, 28,crystalAnimationGreen,28));
-						}
+						spawnCrystals(enemy); // Function to handle crystal spawning
 						iterEnemy.remove();
 					}
 					iterBullet.remove();
@@ -331,6 +338,16 @@ public class bhr extends ApplicationAdapter {
 				iterBullet.remove(); // Remove bullets that exceed range
 			}
 		}
+
+		// Check collisions between guardian skill's tiny circles and enemies
+		for (Iterator<Enemies> iterEnemy = enemies.iterator(); iterEnemy.hasNext(); ) {
+			Enemies enemy = iterEnemy.next();
+			hero.checkCollisionsWithGuardianSkill(iterEnemy);
+			if (!enemy.isAlive()){
+				System.out.println("X-X");
+			}
+		}
+
 		for (Crystal crystal : crystals) {
 			if (!crystal.collected && Intersector.overlapConvexPolygons(crystal.polygon, hero.polygon)) {
 				crystal.collected = true;
@@ -362,9 +379,6 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 	}
-
-
-
 
 	@Override
 	public void dispose() {

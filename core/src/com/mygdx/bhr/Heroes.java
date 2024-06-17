@@ -3,12 +3,15 @@ package com.mygdx.bhr;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.math.Polygon;
-import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
-
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 public class Heroes implements hasHP, canShoot, hasExp {
     Polygon polygon;
@@ -22,9 +25,12 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private long lastAttackTime;
     public int  ExpNeeded;
     private int level;
-    private Sound lvlUps;
-    public boolean checkKondisi = false;
-    public Heroes(int worldWidth, int worldHeight) {
+    private final Sound lvlUps;
+    private final Camera camera;
+    private Set<Skill> skills;
+    private Guardian_Skill guardianSkill;
+    private Texture tinyCircleTexture;
+    public Heroes(int worldWidth, int worldHeight, Camera camera) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
         this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 32, (float) WORLD_HEIGHT / 2 - 32, 64, 64);
@@ -34,9 +40,12 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.ExpNeeded = 200;
         this.bullets = new Array<>();
         this.direction = new Vector2(0, 0);
-        this.lastDirection = new Vector2(1, 0); // Default direction is to the right
+        this.lastDirection = new Vector2(1, 0);
         this.lastAttackTime = TimeUtils.nanoTime();
         this.lvlUps =  Gdx.audio.newSound(Gdx.files.internal("Audio/achievement.wav"));
+        this.camera = camera;
+        this.skills = new HashSet<>();
+        this.tinyCircleTexture = new Texture(Gdx.files.internal("skull_icon.png"));
     }
 
     private Polygon createPolygon(float x, float y, float width, float height) {
@@ -85,6 +94,12 @@ public class Heroes implements hasHP, canShoot, hasExp {
                 iter.remove();
             }
         }
+
+        if (guardianSkill != null) {
+            guardianSkill.update(deltaTime, new Vector2(getX() + polygon.getBoundingRectangle().width / 2, getY() + polygon.getBoundingRectangle().height / 2));
+        }
+
+        checkAndAddSkills();
     }
 
     public float getX() {
@@ -110,12 +125,28 @@ public class Heroes implements hasHP, canShoot, hasExp {
         return hp > 0;
     }
 
+    public void addSkill(Skill skill) {
+        skills.add(skill);
+    }
+
+    public boolean hasSkill(Skill skill) {
+        return skills.contains(skill);
+    }
+
     @Override
     public void shoot() {
         float[] vertices = polygon.getTransformedVertices();
         float x = vertices[0] + polygon.getBoundingRectangle().width / 2;
         float y = vertices[1] + polygon.getBoundingRectangle().height / 2;
-        bullets.add(new Bullet(x, y, new Vector2(lastDirection), WORLD_WIDTH, WORLD_HEIGHT));
+
+        Vector3 mousePosition3 = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+        camera.unproject(mousePosition3);
+        Vector2 mousePosition = new Vector2(mousePosition3.x, mousePosition3.y);
+
+        // Calculate direction from hero to mouse
+        Vector2 direction = mousePosition.sub(x, y).nor();
+
+        bullets.add(new Bullet(x, y, direction, WORLD_WIDTH, WORLD_HEIGHT));
     }
 
     @Override
@@ -147,5 +178,40 @@ public class Heroes implements hasHP, canShoot, hasExp {
 
     public int getLevel() {
         return level;
+    }
+
+    public void addGuardianSkill() {
+        if (guardianSkill == null) {
+            guardianSkill = new Guardian_Skill(tinyCircleTexture);
+        }
+    }
+
+
+    public void drawSkills(SpriteBatch batch) {
+        if (guardianSkill != null) {
+            guardianSkill.draw(batch);
+        }
+    }
+
+    public void checkAndAddSkills() {
+        if (level == 2 && !hasSkill(Skill.GUARDIAN)) {
+            addSkill(Skill.GUARDIAN);
+            addGuardianSkill();
+            System.out.println("Skill acquired: Guardian");
+        }
+        if (level == 10 && !hasSkill(Skill.KAMEHAMEHA)) {
+            addSkill(Skill.KAMEHAMEHA);
+            System.out.println("Skill acquired: Kamehameha");
+        }
+        if (level == 15 && !hasSkill(Skill.MINE_BOMB)) {
+            addSkill(Skill.MINE_BOMB);
+            System.out.println("Skill acquired: Mine Bomb");
+        }
+    }
+
+    public void checkCollisionsWithGuardianSkill(Iterator<Enemies> enemiesIterator) {
+        if (guardianSkill != null) {
+            guardianSkill.checkCollisions(enemiesIterator);
+        }
     }
 }

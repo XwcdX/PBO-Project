@@ -1,0 +1,4 @@
+package com.mygdx.bhr;
+
+public class Kamehameha {
+}
