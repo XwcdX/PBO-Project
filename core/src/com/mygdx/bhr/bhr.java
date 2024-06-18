@@ -116,7 +116,7 @@ public class bhr extends ApplicationAdapter {
 		}
 	}
 
-	private void spawnCrystals(Enemies enemy) {
+	void spawnCrystals(Enemies enemy) {
 		Random rand = new Random();
 		int exp = rand.nextInt(51);
 		int byk50 = exp / 50;
@@ -162,7 +162,7 @@ public class bhr extends ApplicationAdapter {
 		camera.setToOrtho(false, 800, 480);
 		batch = new SpriteBatch();
 
-		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT, camera);
+		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT, camera,this);
 		enemies = new Array<>();
 		crystals = new Array<>();
 		spawnEnemies();
@@ -332,10 +332,6 @@ public class bhr extends ApplicationAdapter {
 					iterBullet.remove();
 					break;
 				}
-			}
-			bullet.update(Gdx.graphics.getDeltaTime()); // Update the bullet after collision check
-			if (bullet.hasExceededRange()) {
-				iterBullet.remove(); // Remove bullets that exceed range
 			}
 		}
 

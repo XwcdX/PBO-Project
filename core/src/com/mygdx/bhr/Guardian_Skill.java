@@ -17,8 +17,9 @@ public class Guardian_Skill {
     private float[] tinyCircleAngles;
     private Circle[] tinyCircles;  // Add circles for collision detection
     private int damage;
+    private bhr game;
 
-    public Guardian_Skill(Texture tinyCircleTexture) {
+    public Guardian_Skill(Texture tinyCircleTexture, bhr game) {
         this.center = new Vector2();
         this.bigCircleRadius = 80;
         this.tinyCircleRadius = 20;
@@ -31,6 +32,7 @@ public class Guardian_Skill {
             tinyCircles[i] = new Circle();
         }
         this.damage = 100;
+        this.game=game;
     }
 
     public void update(float deltaTime, Vector2 heroPosition) {
@@ -60,6 +62,7 @@ public class Guardian_Skill {
                     enemy.takeDamage(damage);
                     if (!enemy.isAlive()) {
                         enemiesIterator.remove();
+                        game.spawnCrystals(enemy);
                     }
                 }
             }

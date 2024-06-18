@@ -29,8 +29,9 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private final Camera camera;
     private Set<Skill> skills;
     private Guardian_Skill guardianSkill;
-    private Texture tinyCircleTexture;
-    public Heroes(int worldWidth, int worldHeight, Camera camera) {
+    private final Texture tinyCircleTexture;
+    private final bhr game;
+    public Heroes(int worldWidth, int worldHeight, Camera camera, bhr game) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
         this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 32, (float) WORLD_HEIGHT / 2 - 32, 64, 64);
@@ -46,6 +47,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.camera = camera;
         this.skills = new HashSet<>();
         this.tinyCircleTexture = new Texture(Gdx.files.internal("skull_icon.png"));
+        this.game = game;
     }
 
     private Polygon createPolygon(float x, float y, float width, float height) {
@@ -182,7 +184,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
 
     public void addGuardianSkill() {
         if (guardianSkill == null) {
-            guardianSkill = new Guardian_Skill(tinyCircleTexture);
+            guardianSkill = new Guardian_Skill(tinyCircleTexture,game);
         }
     }
 
