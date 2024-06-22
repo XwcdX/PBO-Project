@@ -57,7 +57,10 @@ public class bhr extends ApplicationAdapter {
 
 	private Map<Enemies, Float> collisionTimes;
 
-	///
+	public OrthographicCamera getCamera() {
+		return camera;
+	}
+
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		boolean isOverlapping;
@@ -260,9 +263,11 @@ public class bhr extends ApplicationAdapter {
 
 		batch.begin();
 		drawWrapped(heroImage, hero.polygon);
+
 		for (Enemies enemy : enemies) {
 			drawWrapped(enemyImage, enemy.polygon);
 		}
+
 		for (Bullet bullet : hero.getBullets()) {
 			float rotation = bullet.getRotation() - 180;
 			batch.draw(bulletImage,
@@ -288,11 +293,14 @@ public class bhr extends ApplicationAdapter {
 
 		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
 		EXP.draw(batch, "EXP: " + hero.getExp(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 30);
-		LVL.draw(batch,"LVL: "+hero.getLevel(),camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
+		LVL.draw(batch, "LVL: " + hero.getLevel(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
 		batch.end();
 
-		if (TimeUtils.nanoTime() - lastSpawnTime > 1000000000) spawnEnemies();
+		if (TimeUtils.nanoTime() - lastSpawnTime > 1000000000) {
+			spawnEnemies();
+		}
 
+		// Handle enemy and hero collision
 		for (Iterator<Enemies> iter = enemies.iterator(); iter.hasNext(); ) {
 			Enemies enemy = iter.next();
 			enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
@@ -318,7 +326,7 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 
-		// Check collisions between bullets and enemies
+		// Handle bullet and enemy collision
 		for (Iterator<Bullet> iterBullet = hero.getBullets().iterator(); iterBullet.hasNext(); ) {
 			Bullet bullet = iterBullet.next();
 			for (Iterator<Enemies> iterEnemy = enemies.iterator(); iterEnemy.hasNext(); ) {
@@ -335,15 +343,12 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 
-		// Check collisions between guardian skill's tiny circles and enemies
-		for (Iterator<Enemies> iterEnemy = enemies.iterator(); iterEnemy.hasNext(); ) {
-			Enemies enemy = iterEnemy.next();
-			hero.checkCollisionsWithGuardianSkill(iterEnemy);
-			if (!enemy.isAlive()){
-				System.out.println("X-X");
-			}
-		}
+		// Handle skill-specific collisions
+		Iterator<Enemies> enemiesIterator = enemies.iterator();
+		hero.checkCollisionsWithGuardianSkill(enemiesIterator);
+		hero.checkCollisionsWithKamehamehaSkill(enemiesIterator);
 
+		// Handle crystal collection
 		for (Crystal crystal : crystals) {
 			if (!crystal.collected && Intersector.overlapConvexPolygons(crystal.polygon, hero.polygon)) {
 				crystal.collected = true;
@@ -375,6 +380,7 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 	}
+
 
 	@Override
 	public void dispose() {

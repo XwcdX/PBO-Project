@@ -47,7 +47,6 @@ public class Bullet {
         if (dy > WORLD_HEIGHT / 2f) dy = WORLD_HEIGHT - dy;
 
         float distance = (float) Math.sqrt(dx * dx + dy * dy);
-        System.out.println("Distance: " + distance);
         return distance > maxRange;
     }
 
