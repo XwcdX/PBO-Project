@@ -3,7 +3,6 @@ package com.mygdx.bhr;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
@@ -15,6 +14,7 @@ public class Kamehameha {
     private Texture texture;
     private Vector2 position;
     private Vector2 direction;
+    private Vector2 tempVector;
     private float width;
     private float height;
     private Rectangle rectangle;
@@ -22,24 +22,44 @@ public class Kamehameha {
     private bhr game;
     private boolean active;
     private float cooldownTimer;
-    private static final float COOLDOWN_DURATION = 1.0f;
-    private ShapeRenderer shapeRenderer;
+    private static final float COOLDOWN_DURATION = 5.0f;
+    private static final float ACTIVE_DURATION = 0.5f; // 0.5 seconds
+    private float activeTimer;
 
     public Kamehameha(Texture texture, bhr game) {
         this.texture = texture;
         this.position = new Vector2();
         this.direction = new Vector2();
-        this.width = 500;
+        this.tempVector = new Vector2(); // Temporary vector for scaling operations
+        this.width = 300;
         this.height = 50;
         this.rectangle = new Rectangle();
         this.damage = 200;
         this.game = game;
         this.active = false;
-        this.cooldownTimer = 0;
-//        this.shapeRenderer = new ShapeRenderer();
+        this.cooldownTimer = 0; // Start on cooldown
+        this.activeTimer = 0;
     }
 
-    public void update(Vector2 heroPosition) {
+    public void update(float deltaTime, Vector2 heroPosition) {
+        cooldownTimer -= deltaTime;
+
+        if (active) {
+            activeTimer -= deltaTime;
+            if (activeTimer <= 0) {
+                active = false;
+            }
+        }
+
+        if (!active && cooldownTimer <= 0) {
+            activate(heroPosition);
+            cooldownTimer = COOLDOWN_DURATION;
+            activeTimer = ACTIVE_DURATION;
+        }
+    }
+
+    private void activate(Vector2 heroPosition) {
+        active = true;
         Vector3 mousePosition3 = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
         game.getCamera().unproject(mousePosition3);
         Vector2 mousePosition = new Vector2(mousePosition3.x, mousePosition3.y);
@@ -47,44 +67,55 @@ public class Kamehameha {
         // Calculate direction from hero to mouse
         direction.set(mousePosition).sub(heroPosition).nor();
 
-        // Update the rectangle position based on direction
-        position.set(heroPosition).add(direction.scl(width/2));
+        // Debugging: Print out direction and position
+//        System.out.println("Kamehameha activated!");
+//        System.out.println("Mouse Position: " + mousePosition);
+//        System.out.println("Hero Position: " + heroPosition);
+//        System.out.println("Direction: " + direction);
 
-        // Set rectangle position
+        // Use temporary vector for scaling
+        tempVector.set(direction).scl(width / 2f);
+
+        // Set initial position of the rectangle
+        position.set(heroPosition).add(tempVector);
         rectangle.set(position.x, position.y, width, height);
+
+        // Debugging: Print out initial rectangle position
+//        System.out.println("Initial Rectangle Position: " + rectangle.x + ", " + rectangle.y);
     }
 
     public void draw(SpriteBatch batch) {
-        // Calculate the center of the rectangle for rotation
-        float originX = rectangle.width / 2;
-        float originY = rectangle.height / 2;
+        if (active) {
+            // Calculate the center of the rectangle for rotation
+            float originX = width / 2;
+            float originY = height / 2;
 
-        // Draw the texture with rotation around the center of the rectangle
-        batch.draw(texture,
-                rectangle.x - originX, rectangle.y - originY, // Position
-                originX, originY, // Origin for rotation
-                rectangle.width, rectangle.height, // Width and height
-                1, 1, // Scale
-                direction.angleDeg(), // Rotation
-                0, 0, // Texture coordinates
-                texture.getWidth(), texture.getHeight(), // Texture size
-                false, false); // Flip horizontally and vertically
+            // Draw the texture with rotation around the center of the rectangle
+            batch.draw(texture,
+                    position.x - originX, position.y - originY, // Position
+                    originX, originY, // Origin for rotation
+                    width, height, // Width and height
+                    1, 1, // Scale
+                    direction.angleDeg(), // Rotation
+                    0, 0, // Texture coordinates
+                    texture.getWidth(), texture.getHeight(), // Texture size
+                    false, false); // Flip horizontally and vertically
 
-//        shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
-//        shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
-//        shapeRenderer.setColor(1, 0, 0, 1); // Set the color to red
-//        shapeRenderer.rect(rectangle.x - originX, rectangle.y - originY, originX, originY, rectangle.width, rectangle.height, 1, 1, direction.angleDeg());
-//        shapeRenderer.end();
+            // Debugging: Confirm drawing
+//            System.out.println("Drawing Kamehameha at: " + (position.x - originX) + ", " + (position.y - originY));
+        }
     }
 
     public void checkCollisions(Iterator<Enemies> enemiesIterator) {
-        while (enemiesIterator.hasNext()) {
-            Enemies enemy = enemiesIterator.next();
-            if (enemy.polygon != null && Intersector.overlaps(rectangle, enemy.polygon.getBoundingRectangle())) {
-                enemy.takeDamage(damage);
-                if (!enemy.isAlive()) {
-                    enemiesIterator.remove();
-                    game.spawnCrystals(enemy);
+        if (active) {
+            while (enemiesIterator.hasNext()) {
+                Enemies enemy = enemiesIterator.next();
+                if (enemy.polygon != null && Intersector.overlaps(rectangle, enemy.polygon.getBoundingRectangle())) {
+                    enemy.takeDamage(damage);
+                    if (!enemy.isAlive()) {
+                        enemiesIterator.remove();
+                        game.spawnCrystals(enemy);
+                    }
                 }
             }
         }
