@@ -347,6 +347,7 @@ public class bhr extends ApplicationAdapter {
 		Iterator<Enemies> enemiesIterator = enemies.iterator();
 		hero.checkCollisionsWithGuardianSkill(enemiesIterator);
 		hero.checkCollisionsWithKamehamehaSkill(enemiesIterator);
+		hero.checkCollisionsWithMineBombSkill(enemiesIterator);
 
 		// Handle crystal collection
 		for (Crystal crystal : crystals) {

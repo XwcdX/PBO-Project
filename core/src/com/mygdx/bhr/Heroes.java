@@ -30,8 +30,10 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private Set<Skill> skills;
     private Guardian_Skill guardianSkill;
     private Kamehameha kamehamehaSkill;
+    private Mine_Bomb minebombSkill;
     private final Texture tinyCircleTexture;
     private final Texture kamehamehaTexture;
+    private final Texture minebombTexture;
     private final bhr game;
 
     public Heroes(int worldWidth, int worldHeight, Camera camera, bhr game) {
@@ -51,6 +53,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.skills = new HashSet<>();
         this.tinyCircleTexture = new Texture(Gdx.files.internal("skull_icon.png"));
         this.kamehamehaTexture = new Texture(Gdx.files.internal("deathText.png"));
+        this.minebombTexture = new Texture(Gdx.files.internal("restart_button.png"));
         this.game = game;
     }
 
@@ -80,7 +83,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         // Auto attack every 0.5 seconds (500,000,000 nanoseconds)
         long attackInterval = 500000000;
         if (TimeUtils.nanoTime() - lastAttackTime > attackInterval) {
-//            shoot();
+            shoot();
             lastAttackTime = TimeUtils.nanoTime();
         }
 
@@ -107,6 +110,10 @@ public class Heroes implements hasHP, canShoot, hasExp {
 
         if (kamehamehaSkill != null) {
             kamehamehaSkill.update(deltaTime, new Vector2(getX() + polygon.getBoundingRectangle().width / 2, getY() + polygon.getBoundingRectangle().height / 2));
+        }
+
+        if (minebombSkill != null) {
+            minebombSkill.update(deltaTime);
         }
         checkAndAddSkills();
     }
@@ -202,12 +209,21 @@ public class Heroes implements hasHP, canShoot, hasExp {
         }
     }
 
+    public void addMineBombSkill(){
+        if (minebombSkill == null) {
+            minebombSkill = new Mine_Bomb(minebombTexture, game);
+        }
+    }
+
     public void drawSkills(SpriteBatch batch) {
         if (guardianSkill != null) {
             guardianSkill.draw(batch);
         }
         if (kamehamehaSkill != null) {
             kamehamehaSkill.draw(batch);
+        }
+        if (minebombSkill != null) {
+            minebombSkill.draw(batch);
         }
     }
 
@@ -217,13 +233,14 @@ public class Heroes implements hasHP, canShoot, hasExp {
             addGuardianSkill();
             System.out.println("Skill acquired: Guardian");
         }
-        if (level == 1 && hasSkill(Skill.KAMEHAMEHA)) {
+        if (level == 3 && hasSkill(Skill.KAMEHAMEHA)) {
             addSkill(Skill.KAMEHAMEHA);
             addKamehamehaSkill();
             System.out.println("Skill acquired: Kamehameha");
         }
-        if (level == 15 && hasSkill(Skill.MINE_BOMB)) {
+        if (level == 1 && hasSkill(Skill.MINE_BOMB)) {
             addSkill(Skill.MINE_BOMB);
+            addMineBombSkill();
             System.out.println("Skill acquired: Mine Bomb");
         }
     }
@@ -237,6 +254,12 @@ public class Heroes implements hasHP, canShoot, hasExp {
     public void checkCollisionsWithKamehamehaSkill(Iterator<Enemies> enemiesIterator) {
         if (kamehamehaSkill != null) {
             kamehamehaSkill.checkCollisions(enemiesIterator);
+        }
+    }
+
+    public void checkCollisionsWithMineBombSkill(Iterator<Enemies> enemiesIterator) {
+        if (minebombSkill != null) {
+            minebombSkill.checkCollisions(enemiesIterator);
         }
     }
 }
