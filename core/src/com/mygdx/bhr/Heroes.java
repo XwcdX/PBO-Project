@@ -80,7 +80,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         // Auto attack every 0.5 seconds (500,000,000 nanoseconds)
         long attackInterval = 500000000;
         if (TimeUtils.nanoTime() - lastAttackTime > attackInterval) {
-            shoot();
+//            shoot();
             lastAttackTime = TimeUtils.nanoTime();
         }
 
