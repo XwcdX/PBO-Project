@@ -81,7 +81,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         polygon.translate(direction.x * 300 * deltaTime, direction.y * 300 * deltaTime);
 
         // Auto attack every 0.5 seconds (500,000,000 nanoseconds)
-        long attackInterval = 500000000;
+        long attackInterval = 1000000000;
         if (TimeUtils.nanoTime() - lastAttackTime > attackInterval) {
             shoot();
             lastAttackTime = TimeUtils.nanoTime();
@@ -228,12 +228,12 @@ public class Heroes implements hasHP, canShoot, hasExp {
     }
 
     public void checkAndAddSkills() {
-        if (level == 2 && hasSkill(Skill.GUARDIAN)) {
+        if (level == 5 && hasSkill(Skill.GUARDIAN)) {
             addSkill(Skill.GUARDIAN);
             addGuardianSkill();
             System.out.println("Skill acquired: Guardian");
         }
-        if (level == 3 && hasSkill(Skill.KAMEHAMEHA)) {
+        if (level == 10 && hasSkill(Skill.KAMEHAMEHA)) {
             addSkill(Skill.KAMEHAMEHA);
             addKamehamehaSkill();
             System.out.println("Skill acquired: Kamehameha");

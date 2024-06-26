@@ -31,7 +31,7 @@ public class Guardian_Skill {
         for (int i = 0; i < tinyCircles.length; i++) {
             tinyCircles[i] = new Circle();
         }
-        this.damage = 100;
+        this.damage = 3;
         this.game = game;
     }
 

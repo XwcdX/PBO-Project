@@ -28,7 +28,7 @@ public class Mine_Bomb {
     private ShapeRenderer shapeRenderer;
     private static final float INITIAL_RADIUS = 50;
     private static final float EXPLOSION_RADIUS = 100;
-    private static final int EXPLOSION_DAMAGE = 100;
+    private static final int EXPLOSION_DAMAGE = 250;
 
     public Mine_Bomb(Texture texture, bhr game) {
         this.texture = texture;

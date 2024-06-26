@@ -35,9 +35,9 @@ public class Kamehameha {
         this.direction = new Vector2();
         this.tempVector = new Vector2(); // Temporary vector for scaling operations
         this.width = 300;
-        this.height = 25;
+        this.height = 30;
         this.polygon = new Polygon();
-        this.damage = 1;
+        this.damage = 100;
         this.game = game;
         this.active = false;
         this.cooldownTimer = 0; // Start on cooldown

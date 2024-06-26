@@ -38,6 +38,11 @@ public class bhr extends ApplicationAdapter {
 	private Array<Enemies> enemies;
 	private long lastSpawnTime;
 
+	//stats
+	private int spawntime = 1000000000;
+	private int hero_atk = 30;
+	private int enemy_atk = 15;
+
 	private final int WORLD_WIDTH = 3200;
 	private final int WORLD_HEIGHT = 1920;
 	// Adding gems
@@ -342,7 +347,11 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 
-		if (TimeUtils.nanoTime() - lastSpawnTime > 1000000000) {
+		// klo level hero dibawah tertentu monster spawn normal
+		if (hero.getLevel() % 10 == 0){
+			spawntime-=100000;
+		}
+		if (TimeUtils.nanoTime() - lastSpawnTime > spawntime) {
 			spawnEnemies();
 		}
 
@@ -358,9 +367,9 @@ public class bhr extends ApplicationAdapter {
 				float collisionTime = collisionTimes.get(enemy) + Gdx.graphics.getDeltaTime();
 				collisionTimes.put(enemy, collisionTime);
 
-				if (collisionTime >= 2f) {
+				if (collisionTime >= 1f) {
 					enemyS.play();
-					hero.takeDamage(10);
+					hero.takeDamage(enemy_atk); // biar enemy atk bisa tambah sakit makin late game
 					if (!hero.isAlive()) {
 						dispose();
 					}
@@ -370,6 +379,9 @@ public class bhr extends ApplicationAdapter {
 			} else {
 				collisionTimes.remove(enemy);
 			}
+		}
+		if (hero.getLevel() % 10 == 0){
+			enemy_atk+=10;
 		}
 
 		// Handle bullet and enemy collision
