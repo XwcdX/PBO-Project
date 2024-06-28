@@ -50,6 +50,7 @@ public class bhr extends ApplicationAdapter {
 	private Texture greenImg1,greenImg2,greenImg3,greenImg4;
 	private Texture pinkImg1,pinkImg2,pinkImg3,pinkImg4;
 	private Texture purpleImg1,purpleImg2,purpleImg3,purpleImg4;
+	private Texture[] generateFireballImg;
 	private Texture texture_pause;
 	private Sprite pause;
 	public Animation<TextureRegion> crystalAnimationRed;
@@ -57,6 +58,7 @@ public class bhr extends ApplicationAdapter {
 	public Animation<TextureRegion> crystalAnimationPurple;
 	public Animation<TextureRegion> crystalAnimationPink;
 	public Animation<TextureRegion> crystalAnimationGreen;
+	public Animation<TextureRegion> firebalAnimation;
 	public Array<Crystal>crystals;
 
 	private Map<Enemies, Float> collisionTimes;
@@ -157,8 +159,8 @@ public class bhr extends ApplicationAdapter {
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
 		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
-		bulletImage = new Texture(Gdx.files.internal("fireballtest1.png"));
-		bulletImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+//		bulletImage = new Texture(Gdx.files.internal("fireballtest1.png"));
+//		bulletImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
 		heroImage = new Texture(Gdx.files.internal("charaTest1.png"));
 		heroImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -176,6 +178,16 @@ public class bhr extends ApplicationAdapter {
 		enemies = new Array<>();
 		crystals = new Array<>();
 		spawnEnemies();
+		Texture []generateFireballImg = new Texture[60];
+		TextureRegion[] texture_region = new TextureRegion[60];
+		for(int i = 0;i<60;i++){
+			String filename = String.format("Fireball_Frames/Effect_FastPixelFire_1_%03d.png",i);
+			generateFireballImg[i] = new Texture(Gdx.files.internal(filename));
+			texture_region[i] = new TextureRegion(generateFireballImg[i]);
+		}
+
+		firebalAnimation = new Animation<>(0.1f,texture_region);
+		firebalAnimation.setPlayMode(Animation.PlayMode.LOOP);
 		/*
 		Make Texture Image
 		 */
@@ -260,79 +272,82 @@ public class bhr extends ApplicationAdapter {
 	boolean paused;
 	@Override
 	public void render() {
-		ScreenUtils.clear(0, 0, 0.2f, 1);
+        ScreenUtils.clear(0, 0, 0.2f, 1);
 
-		if (paused) {
-			if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isTouched()) {
-				paused = false;
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-		} else {
-			GeneralUpdate();
-			hero.update(Gdx.graphics.getDeltaTime());
-		}
+        if (paused) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isTouched()) {
+                paused = false;
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            GeneralUpdate();
+            hero.update(Gdx.graphics.getDeltaTime());
+        }
 
-		// Update camera position
-		camera.position.set(hero.getX() + 32, hero.getY() + 32, 0);
-		camera.update();
+        // Update camera position
+        camera.position.set(hero.getX() + 32, hero.getY() + 32, 0);
+        camera.update();
 
-		// Ensure batch uses the camera's projection matrix
-		batch.setProjectionMatrix(camera.combined);
+        // Ensure batch uses the camera's projection matrix
+        batch.setProjectionMatrix(camera.combined);
 
-		batch.begin();
+        batch.begin();
 
-		// Draw hero and other entities
-		drawWrapped(heroImage, hero.polygon);
+        // Draw hero and other entities
+        drawWrapped(heroImage, hero.polygon);
 
-		for (Enemies enemy : enemies) {
-			drawWrapped(enemyImage, enemy.polygon);
-		}
+        for (Enemies enemy : enemies) {
+            drawWrapped(enemyImage, enemy.polygon);
+        }
 
-		for (Bullet bullet : hero.getBullets()) {
-			float rotation = bullet.getRotation() - 180;
-			batch.draw(bulletImage,
-					bullet.circle.x - bullet.circle.radius, bullet.circle.y - bullet.circle.radius,
-					bullet.circle.radius, bullet.circle.radius,
-					bulletImage.getWidth(), bulletImage.getHeight(),
-					1f, 1f,
-					rotation,
-					0, 0,
-					bulletImage.getWidth(), bulletImage.getHeight(),
-					false, false);
-		}
+		float deltaTime = Gdx.graphics.getDeltaTime();
+        for (Bullet bullet : hero.getBullets()) {
+			bullet.updates(deltaTime);
+            float rotation = bullet.getRotation() - 180;
+			TextureRegion currentFrame = firebalAnimation.getKeyFrame(bullet.getStateTime(), true);
+            batch.draw(currentFrame.getTexture(),
+                    bullet.circle.x - bullet.circle.radius, bullet.circle.y - bullet.circle.radius,
+                    bullet.circle.radius, bullet.circle.radius,
+                    currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),
+                    0.3f, 0.3f,
+                    rotation,
+                    0, 0,
+                    currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),
+                    false, false);
+        }
 
-		for (Crystal crystal : crystals) {
-			crystal.updateStateTime(Gdx.graphics.getDeltaTime());
-			if (!crystal.collected) {
-				Texture texture = crystal.getTexture();
-				drawWrapped(texture, crystal.polygon);
-			}
-		}
+        for (Crystal crystal : crystals) {
+            crystal.updateStateTime(Gdx.graphics.getDeltaTime());
+            if (!crystal.collected) {
+                Texture texture = crystal.getTexture();
+                drawWrapped(texture, crystal.polygon);
+            }
+        }
 
-		hero.drawSkills(batch);
+        hero.drawSkills(batch);
 
-		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
-		EXP.draw(batch, "EXP: " + hero.getExp(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 30);
-		LVL.draw(batch, "LVL: " + hero.getLevel(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
+        HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
+        EXP.draw(batch, "EXP: " + hero.getExp(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 30);
+        LVL.draw(batch, "LVL: " + hero.getLevel(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
 
-		// Draw pause texture if paused
-		if (paused) {
-			// Set color with alpha value for transparency (e.g., 0.5f for 50% transparency)
-			batch.setColor(1, 1, 1, 0.5f);
-			// Draw pause texture to cover the entire screen
-			float pauseX = camera.position.x - camera.viewportWidth / 2;
-			float pauseY = camera.position.y - camera.viewportHeight / 2;
-			batch.draw(pause, pauseX, pauseY, camera.viewportWidth, camera.viewportHeight);
-			// Reset color to white (fully opaque) for subsequent drawings
-			batch.setColor(1, 1, 1, 1);
-		}
+        // Draw pause texture if paused
+        if (paused) {
+            // Set color with alpha value for transparency (e.g., 0.5f for 50% transparency)
+            batch.setColor(1, 1, 1, 0.5f);
+            // Draw pause texture to cover the entire screen
+            float pauseX = camera.position.x - camera.viewportWidth / 2;
+            float pauseY = camera.position.y - camera.viewportHeight / 2;
+            batch.draw(pause, pauseX, pauseY, camera.viewportWidth, camera.viewportHeight);
+            // Reset color to white (fully opaque) for subsequent drawings
+            batch.setColor(1, 1, 1, 1);
+        }
 
-		batch.end();
-	}
+        batch.end();
+    }
 
 
 	public void GeneralUpdate(){
