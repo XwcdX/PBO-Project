@@ -21,7 +21,6 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.utils.Timer;
 import org.w3c.dom.Text;
-
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
 	private BitmapFont EXP;
