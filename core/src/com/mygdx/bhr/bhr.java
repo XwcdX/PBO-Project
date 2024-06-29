@@ -97,7 +97,7 @@ public class bhr extends ApplicationAdapter {
 		int randomValue = random.nextInt(currentRandomBound);
 
 		if (minute < 3) {
-			enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 		} else if (minute < 4) {
 			// 25% chance for Long_Enemy, 75% chance for regular Enemies
 			if (randomValue == 3) {
