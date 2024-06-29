@@ -57,6 +57,10 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.game = game;
     }
 
+    public Polygon getPolygon() {
+        return polygon;
+    }
+
     private Polygon createPolygon(float x, float y, float width, float height) {
         float[] vertices = {0, 0, width, 0, width, height, 0, height};
         Polygon polygon = new Polygon(vertices);

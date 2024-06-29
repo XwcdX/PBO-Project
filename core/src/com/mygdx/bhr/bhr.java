@@ -12,20 +12,19 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
-import com.badlogic.gdx.utils.Timer;
-import org.w3c.dom.Text;
+
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
 	private BitmapFont EXP;
 	private BitmapFont LVL;
 	private Texture enemyImage;
+	private Texture longEnemyImage;
 	private Sound enemyS;
 	private Sound crystalCollectS;
 	private Sound lvlUps;
@@ -62,14 +61,19 @@ public class bhr extends ApplicationAdapter {
 	public Array<Crystal>crystals;
 
 	private Map<Enemies, Float> collisionTimes;
-
-	public OrthographicCamera getCamera() {
-		return camera;
-	}
+	public static Array<Enemy_Bullet> enemyBullets = new Array<>();
+	public static Array<Enemy_Bomb> enemyBombs = new Array<>();
+	private long lastBoundChangeTime = TimeUtils.nanoTime();
+	private int currentRandomBound = 1;
+	private int minute = 0;
 
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		boolean isOverlapping;
+		int safetyCounter = 0;
+		final int MAX_TRIES = 100;
+
+		// Create a new enemy polygon, ensuring it does not overlap with existing enemies
 		do {
 			enemyPolygon = createPolygon(MathUtils.random(0, WORLD_WIDTH - 64), MathUtils.random(0, WORLD_HEIGHT - 64), 64, 64);
 			isOverlapping = false;
@@ -80,9 +84,53 @@ public class bhr extends ApplicationAdapter {
 					break;
 				}
 			}
+
+			safetyCounter++;
+			if (safetyCounter > MAX_TRIES) {
+				// Exit the loop to avoid infinite loop if no suitable position is found
+				break;
+			}
 		} while (isOverlapping);
-		enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+
+		// Randomly determine the type of enemy to spawn
+		Random random = new Random();
+		int randomValue = random.nextInt(currentRandomBound);
+
+		if (minute < 3) {
+			enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+		} else if (minute < 4) {
+			// 25% chance for Long_Enemy, 75% chance for regular Enemies
+			if (randomValue == 3) {
+				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			} else {
+				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			}
+		} else if (minute < 6) {
+			// 16.6% chance for Bomber_Enemy, 33.3% chance for Long_Enemy, 50% chance for regular Enemies
+			if (randomValue == 5) {
+				enemies.add(new Bomber_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			} else if (randomValue >= 3 && randomValue <= 4) {
+				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			} else {
+				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			}
+		} else {
+			// 20% chance for Bomber_Enemy, 30% chance for Long_Enemy, 50% chance for regular Enemies
+			randomValue = random.nextInt(10);
+			if (randomValue >= 8) {
+				enemies.add(new Bomber_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			} else if (randomValue >= 5) {
+				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			} else {
+				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			}
+		}
+
 		lastSpawnTime = TimeUtils.nanoTime();
+	}
+
+	public OrthographicCamera getCamera() {
+		return camera;
 	}
 
 	private Polygon createPolygon(float x, float y, float width, float height) {
@@ -159,8 +207,11 @@ public class bhr extends ApplicationAdapter {
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
 		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
-//		bulletImage = new Texture(Gdx.files.internal("fireballtest1.png"));
-//		bulletImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+		longEnemyImage = new Texture(Gdx.files.internal("charaTest1.png"));
+		longEnemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+
+		bulletImage = new Texture(Gdx.files.internal("fireballtest1.png"));
+		bulletImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
 		heroImage = new Texture(Gdx.files.internal("charaTest1.png"));
 		heroImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -177,7 +228,6 @@ public class bhr extends ApplicationAdapter {
 		hero = new Heroes(WORLD_WIDTH, WORLD_HEIGHT, camera,this);
 		enemies = new Array<>();
 		crystals = new Array<>();
-		spawnEnemies();
 		Texture []generateFireballImg = new Texture[60];
 		TextureRegion[] texture_region = new TextureRegion[60];
 		for(int i = 0;i<60;i++){
@@ -301,8 +351,22 @@ public class bhr extends ApplicationAdapter {
         drawWrapped(heroImage, hero.polygon);
 
         for (Enemies enemy : enemies) {
-            drawWrapped(enemyImage, enemy.polygon);
+			if (enemy instanceof Long_Enemy){
+				drawWrapped(longEnemyImage, enemy.polygon);
+			} else if (enemy instanceof Bomber_Enemy) {
+				drawWrapped(longEnemyImage, enemy.polygon);
+			} else {
+				drawWrapped(enemyImage, enemy.polygon);
+			}
         }
+
+		for (Enemy_Bullet bullet : enemyBullets) {
+			batch.draw(bulletImage, bullet.getPosition().x, bullet.getPosition().y);
+		}
+
+		for (Enemy_Bomb bomb : enemyBombs){
+			bomb.draw(batch);
+		}
 
 		float deltaTime = Gdx.graphics.getDeltaTime();
         for (Bullet bullet : hero.getBullets()) {
@@ -365,8 +429,16 @@ public class bhr extends ApplicationAdapter {
 		if (hero.getLevel() % 10 == 0){
 			spawntime-=100000;
 		}
+		// Check if it's time to spawn enemies
 		if (TimeUtils.nanoTime() - lastSpawnTime > spawntime) {
 			spawnEnemies();
+		}
+
+		// Check if a minute has passed to update bounds
+		if (TimeUtils.nanoTime() - lastBoundChangeTime > 60000000000L) { // 1 minute in nanoseconds
+			currentRandomBound += 1;
+			minute += 1;
+			lastBoundChangeTime = TimeUtils.nanoTime(); // Reset the last bound change time
 		}
 
 		// Handle enemy and hero collision
@@ -384,21 +456,16 @@ public class bhr extends ApplicationAdapter {
 				if (collisionTime >= 1f) {
 					enemyS.play();
 					hero.takeDamage(enemy_atk); // biar enemy atk bisa tambah sakit makin late game
-					if (!hero.isAlive()) {
-						dispose();
-					}
 					iter.remove();
-					collisionTimes.remove(enemy);
 				}
-			} else {
-				collisionTimes.remove(enemy);
 			}
 		}
+
 		if (hero.getLevel() % 10 == 0){
 			enemy_atk+=10;
 		}
 
-		// Handle bullet and enemy collision
+		// Handle bullet and enemy collision (Heroes)
 		for (Iterator<Bullet> iterBullet = hero.getBullets().iterator(); iterBullet.hasNext(); ) {
 			Bullet bullet = iterBullet.next();
 			for (Iterator<Enemies> iterEnemy = enemies.iterator(); iterEnemy.hasNext(); ) {
@@ -411,6 +478,33 @@ public class bhr extends ApplicationAdapter {
 					}
 					iterBullet.remove();
 					break;
+				}
+			}
+		}
+
+		for (Iterator<Enemy_Bullet> iter = enemyBullets.iterator(); iter.hasNext(); ) {
+			Enemy_Bullet bullet = iter.next();
+			bullet.update(Gdx.graphics.getDeltaTime(),hero.polygon);
+			if (Intersector.overlaps(bullet.getBoundingCircle(), hero.polygon.getBoundingRectangle())) {
+				hero.takeDamage(10);
+				iter.remove();
+			}
+			if (bullet.getTimeAlive() > Enemy_Bullet.LIFESPAN) {
+				iter.remove();
+			}
+		}
+
+		for (Iterator<Enemy_Bomb> iter = enemyBombs.iterator(); iter.hasNext(); ) {
+			Enemy_Bomb bomb = iter.next();
+			bomb.update();
+			if (bomb.isExploded()) {
+				if (!bomb.hasHeroBeenDamaged() && Intersector.overlaps(bomb.getCircle(), hero.getPolygon().getBoundingRectangle())) {
+					hero.takeDamage(25);
+					bomb.setHeroDamaged(true);
+				}
+
+				if (bomb.shouldRemove()) {
+					iter.remove();
 				}
 			}
 		}
@@ -451,6 +545,9 @@ public class bhr extends ApplicationAdapter {
 						break;
 				}
 			}
+		}
+		if (!hero.isAlive()) {
+			dispose();
 		}
 	}
 
