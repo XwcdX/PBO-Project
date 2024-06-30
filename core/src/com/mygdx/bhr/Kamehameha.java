@@ -124,7 +124,7 @@ public class Kamehameha {
                     position.x - originX, position.y - originY, // Position
                     originX, originY, // Origin for rotation
                     width, height, // Width and height
-                    1, 1, // Scale
+                    1.3f, 3, // Scale
                     direction.angleDeg(), // Rotation
                     0, 0, // Texture coordinates
                     currentFrame.getRegionWidth(), currentFrame.getRegionHeight(), // Texture size
@@ -133,7 +133,7 @@ public class Kamehameha {
             // Debugging: Confirm drawing
             System.out.println("Drawing Kamehameha at: " + (position.x - originX) + ", " + (position.y - originY));
 
-////             Draw polygon for debugging
+            // Draw polygon for debugging
 //            shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
 //            shapeRenderer.begin(ShapeRenderer.ShapeType.Line);
 //            shapeRenderer.setColor(Color.RED);

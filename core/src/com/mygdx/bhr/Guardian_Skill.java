@@ -36,6 +36,14 @@ public class Guardian_Skill {
         this.game = game;
     }
 
+    public void setTinyCircleAngles(float[] tinyCircleAngles) {
+        this.tinyCircleAngles = tinyCircleAngles;
+    }
+
+    public void setTinyCircles(Circle[] tinyCircles) {
+        this.tinyCircles = tinyCircles;
+    }
+
     // Update the position and angles of the tiny circles
     public void update(float deltaTime, Vector2 heroPosition,float animationTime) {
         center.set(heroPosition); // Set the center to the hero's position
