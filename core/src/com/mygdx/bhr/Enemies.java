@@ -6,9 +6,10 @@ import com.badlogic.gdx.math.Vector2;
 public class Enemies implements hasHP {
     Polygon polygon;
     Vector2 velocity;
-    private final int WORLD_WIDTH;
-    private final int WORLD_HEIGHT;
+    protected final int WORLD_WIDTH;
+    protected final int WORLD_HEIGHT;
     private int hp;
+    private float stateTime;
 
     public Enemies(Polygon polygon, int worldWidth, int worldHeight) {
         this.polygon = polygon;
@@ -16,6 +17,7 @@ public class Enemies implements hasHP {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
         this.hp = 100;
+        this.stateTime = 30f;
     }
 
     public void update(float deltaTime, Polygon heroPolygon) {
@@ -27,6 +29,8 @@ public class Enemies implements hasHP {
         polygon.translate(velocity.x * deltaTime, velocity.y * deltaTime);
 
         wrapAroundWorld();
+
+        stateTime += deltaTime;
     }
     protected Vector2 shortestDirection(Polygon from, Polygon to) {
         Vector2 fromCenter = new Vector2(from.getBoundingRectangle().x + from.getBoundingRectangle().width / 2, from.getBoundingRectangle().y + from.getBoundingRectangle().height / 2);
@@ -80,4 +84,13 @@ public class Enemies implements hasHP {
     public void takeDamage(int damage) {
         hp -= damage;
     }
+
+    public float getStateTime() {
+        return stateTime;
+    }
+
+    public void resetStateTime() {
+        stateTime = 0f;
+    }
+
 }

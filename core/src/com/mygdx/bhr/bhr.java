@@ -1,9 +1,6 @@
 package com.mygdx.bhr;
 
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
@@ -66,9 +63,11 @@ public class bhr extends ApplicationAdapter {
 	private long lastBoundChangeTime = TimeUtils.nanoTime();
 	private int currentRandomBound = 1;
 	private int minute = 0;
+	Array<Enemies> summonedEnemies = new Array<>();
 
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
+		Polygon bossPolygon;
 		boolean isOverlapping;
 		int safetyCounter = 0;
 		final int MAX_TRIES = 100;
@@ -76,6 +75,7 @@ public class bhr extends ApplicationAdapter {
 		// Create a new enemy polygon, ensuring it does not overlap with existing enemies
 		do {
 			enemyPolygon = createPolygon(MathUtils.random(0, WORLD_WIDTH - 64), MathUtils.random(0, WORLD_HEIGHT - 64), 64, 64);
+			bossPolygon = createPolygon(MathUtils.random(0, WORLD_WIDTH - 96), MathUtils.random(0, WORLD_HEIGHT - 96), 96, 96);
 			isOverlapping = false;
 
 			for (Enemies enemy : enemies) {
@@ -96,6 +96,13 @@ public class bhr extends ApplicationAdapter {
 		Random random = new Random();
 		int randomValue = random.nextInt(currentRandomBound);
 
+		int totalBoss=0;
+		for (Enemies cekBoss : enemies){
+			if (cekBoss instanceof  BossSpawner_Enemy){
+				totalBoss++;
+			}
+		}
+
 		if (minute < 3) {
 			enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 		} else if (minute < 4) {
@@ -115,11 +122,13 @@ public class bhr extends ApplicationAdapter {
 				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			}
 		} else {
-			// 20% chance for Bomber_Enemy, 30% chance for Long_Enemy, 50% chance for regular Enemies
-			randomValue = random.nextInt(10);
-			if (randomValue >= 8) {
+			// 5% chance for Boss 20% chance for Bomber_Enemy, 30% chance for Long_Enemy, 45% chance for regular Enemies
+			randomValue = random.nextInt(100);
+			if (randomValue >= 95 && totalBoss<=8){
+				enemies.add(new BossSpawner_Enemy(bossPolygon, WORLD_WIDTH, WORLD_HEIGHT, summonedEnemies));
+			} else if (randomValue >= 75) {
 				enemies.add(new Bomber_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
-			} else if (randomValue >= 5) {
+			} else if (randomValue >= 45) {
 				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			} else {
 				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
@@ -355,6 +364,8 @@ public class bhr extends ApplicationAdapter {
 				drawWrapped(longEnemyImage, enemy.polygon);
 			} else if (enemy instanceof Bomber_Enemy) {
 				drawWrapped(longEnemyImage, enemy.polygon);
+			} else if(enemy instanceof BossSpawner_Enemy){
+				drawWrapped(enemyImage, enemy.polygon);
 			} else {
 				drawWrapped(enemyImage, enemy.polygon);
 			}
@@ -442,24 +453,25 @@ public class bhr extends ApplicationAdapter {
 		}
 
 		// Handle enemy and hero collision
-		for (Iterator<Enemies> iter = enemies.iterator(); iter.hasNext(); ) {
-			Enemies enemy = iter.next();
-			enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
+        for (Enemies enemy : enemies) {
+            enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
+            if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
+                if (!collisionTimes.containsKey(enemy)) {
+                    collisionTimes.put(enemy, 0f);
+                }
+                float collisionTime = collisionTimes.get(enemy) + Gdx.graphics.getDeltaTime();
+                collisionTimes.put(enemy, collisionTime);
 
-			if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
-				if (!collisionTimes.containsKey(enemy)) {
-					collisionTimes.put(enemy, 0f);
-				}
-				float collisionTime = collisionTimes.get(enemy) + Gdx.graphics.getDeltaTime();
-				collisionTimes.put(enemy, collisionTime);
-
-				if (collisionTime >= 1f) {
-					enemyS.play();
-					hero.takeDamage(enemy_atk); // biar enemy atk bisa tambah sakit makin late game
-					iter.remove();
-				}
+                if (collisionTime >= 1f) {
+                    enemyS.play();
+                    hero.takeDamage(enemy_atk); // biar enemy atk bisa tambah sakit makin late game
+                }
+            }
+			if (enemy instanceof BossSpawner_Enemy){
+				enemies.addAll(summonedEnemies);
+				summonedEnemies.clear();
 			}
-		}
+        }
 
 		if (hero.getLevel() % 10 == 0){
 			enemy_atk+=10;
