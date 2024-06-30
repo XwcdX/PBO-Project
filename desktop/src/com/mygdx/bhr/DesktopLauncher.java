@@ -1,5 +1,6 @@
 package com.mygdx.bhr;
 
+import com.badlogic.gdx.Graphics;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 public class DesktopLauncher {
@@ -8,7 +9,11 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.setTitle("PBO Project");
 		config.useVsync(true);
-		config.setWindowedMode(1920, 1080);
+
+		// Set to fullscreen mode
+		Graphics.DisplayMode displayMode = Lwjgl3ApplicationConfiguration.getDisplayMode();
+		config.setFullscreenMode(displayMode);
+
 		new Lwjgl3Application(new bhr(), config);
 	}
 }
