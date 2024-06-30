@@ -461,8 +461,11 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 
-		if (hero.getLevel() % 10 == 0){
-			enemy_atk+=10;
+		if (hero.getLevel() % 4 == 0){
+			enemy_atk+=5;
+		}
+		if (hero.getLevel() % 2 == 0){
+			hero_atk+=5;
 		}
 
 		// Handle bullet and enemy collision (Heroes)
