@@ -272,39 +272,39 @@ public class Heroes implements hasHP, canShoot, hasExp {
     }
 
     public void checkAndAddSkills() {
-        if (level == 1 && hasSkill(Skill.MINE_BOMB)) {
+        if (level == 2 && hasSkill(Skill.MINE_BOMB)) {
             addSkill(Skill.MINE_BOMB);
             addMineBombSkill();
             modal.show("Skill Acquired : Mine Bomb", 2f);
         }
-        if (level == 2 && hasSkill(Skill.GUARDIAN)) {
+        if (level == 3 && hasSkill(Skill.GUARDIAN)) {
             addSkill(Skill.GUARDIAN);
             addGuardianSkill();
             modal.show("Skill Acquired : Guardian", 2f);
         }
-        if (level == 3 && hasSkill(Skill.KAMEHAMEHA)) {
+        if (level == 4 && hasSkill(Skill.KAMEHAMEHA)) {
             addSkill(Skill.KAMEHAMEHA);
             addKamehamehaSkill();
             modal.show("Skill Acquired : Flame Thrower", 2f);
         }
-        if (level == 4 && !level2bomb) {
+        if (level == 5 && !level2bomb) {
             minebombSkill.setInitialRadius(50);
             minebombSkill.setExplosionRadius(100);
             modal.show("Skill Upgraded : Big Bomb", 2f);
             level2bomb = true;
         }
-        if (level == 5 && !level2guardian) {
+        if (level == 6 && !level2guardian) {
             guardianSkill.setNumberOfCircles(4);
             modal.show("Skill Upgraded : Protector", 2f);
             level2guardian = true;
         }
-        if (level == 6 && !level2kamehameha) {
+        if (level == 7 && !level2kamehameha) {
             kamehamehaSkill.setWidth(300);
             kamehamehaSkill.setHeight(30);
             modal.show("Skill Upgraded : Flame Prince", 2f);
             level2kamehameha = true;
         }
-        if (level == 7 && !level3bomb) {
+        if (level == 8 && !level3bomb) {
             minebombSkill.setInitialRadius(60);
             minebombSkill.setExplosionRadius(110);
             minebombSkill.setCooldownDuration(5f);
@@ -313,13 +313,13 @@ public class Heroes implements hasHP, canShoot, hasExp {
             modal.show("Skill Upgraded : The True Bomber", 2f);
             level3bomb = true;
         }
-        if (level == 8 && !level3guardian) {
+        if (level == 9 && !level3guardian) {
             guardianSkill.setNumberOfCircles(5);
             guardianSkill.setSpeed(.2f);
             modal.show("Skill Upgraded : Ancient Guard", 2f);
             level3guardian = true;
         }
-        if (level == 9 && !level3kamehameha) {
+        if (level == 10 && !level3kamehameha) {
             kamehamehaSkill.setHeight(50);
             kamehamehaSkill.setWidth(350);
             kamehamehaSkill.setACTIVE_DURATION(1.5f);
