@@ -10,7 +10,13 @@ public class Bullet {
     private final Vector2 direction;
     private final int WORLD_WIDTH;
     private final int WORLD_HEIGHT;
+    private float speed = 1000f;
     private float stateTime;
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+
     public Bullet(float x, float y, Vector2 direction, int worldWidth, int worldHeight) {
         this.circle = new Circle(x, y, 5); // Radius of the bullet is 5
         this.initialPosition = new Vector2(x, y);
@@ -22,7 +28,6 @@ public class Bullet {
     }
 
     public void update(float deltaTime) {
-        float speed = 1000f;
         realPosition.x += direction.x * speed * deltaTime;
         realPosition.y += direction.y * speed * deltaTime;
 

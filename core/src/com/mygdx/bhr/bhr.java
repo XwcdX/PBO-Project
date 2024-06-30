@@ -543,8 +543,11 @@ public class bhr extends ApplicationAdapter {
                 collisionTimes.put(enemy, collisionTime);
 
                 if (collisionTime >= 1f) {
-                    enemyS.play();
-                    hero.takeDamage(enemy_atk); // biar enemy atk bisa tambah sakit makin late game
+					if (!enemy.isDoneCollision()){
+						enemyS.play();
+						hero.takeDamage(5);
+						enemy.setDoneCollision(true);
+					}
                 }
             }
 			if (enemy instanceof BossSpawner_Enemy){

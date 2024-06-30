@@ -26,18 +26,35 @@ public class Kamehameha {
     private bhr game;
     private boolean active;
     private float cooldownTimer;
-    private static final float COOLDOWN_DURATION = 5.0f;
-    private static final float ACTIVE_DURATION = 1.0f;
+    private float COOLDOWN_DURATION = 6.0f;
+    private float ACTIVE_DURATION = 0.5f;
     private float activeTimer;
     private ShapeRenderer shapeRenderer =new ShapeRenderer();
     private float stateTime;
+
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+    public void setHeight(float height) {
+        this.height = height;
+    }
+
+    public void setCOOLDOWN_DURATION(float COOLDOWN_DURATION) {
+        this.COOLDOWN_DURATION = COOLDOWN_DURATION;
+    }
+
+    public void setACTIVE_DURATION(float ACTIVE_DURATION) {
+        this.ACTIVE_DURATION = ACTIVE_DURATION;
+    }
+
     public Kamehameha(Animation<TextureRegion> texture, bhr game) {
         this.texture = texture;
         this.position = new Vector2();
         this.direction = new Vector2();
         this.tempVector = new Vector2(); // Temporary vector for scaling operations
-        this.width = 300;
-        this.height = 30;
+        this.width = 150;
+        this.height = 15;
         this.polygon = new Polygon();
         this.damage = 100;
         this.game = game;
@@ -131,7 +148,7 @@ public class Kamehameha {
                     false, false); // Flip horizontally and vertically
 
             // Debugging: Confirm drawing
-            System.out.println("Drawing Kamehameha at: " + (position.x - originX) + ", " + (position.y - originY));
+            //System.out.println("Drawing Kamehameha at: " + (position.x - originX) + ", " + (position.y - originY));
 
             // Draw polygon for debugging
 //            shapeRenderer.setProjectionMatrix(batch.getProjectionMatrix());
