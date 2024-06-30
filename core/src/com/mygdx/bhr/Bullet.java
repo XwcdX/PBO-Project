@@ -10,7 +10,7 @@ public class Bullet {
     private final Vector2 direction;
     private final int WORLD_WIDTH;
     private final int WORLD_HEIGHT;
-
+    private float stateTime;
     public Bullet(float x, float y, Vector2 direction, int worldWidth, int worldHeight) {
         this.circle = new Circle(x, y, 5); // Radius of the bullet is 5
         this.initialPosition = new Vector2(x, y);
@@ -18,6 +18,7 @@ public class Bullet {
         this.direction = new Vector2(direction).nor(); // Ensure direction is normalized
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
+        this.stateTime = 0f;
     }
 
     public void update(float deltaTime) {
@@ -52,5 +53,11 @@ public class Bullet {
 
     public float getRotation() {
         return direction.angleDeg();
+    }
+    public float getStateTime() {
+        return stateTime;
+    }
+    public void updates(float deltaTime){
+        stateTime += deltaTime;
     }
 }

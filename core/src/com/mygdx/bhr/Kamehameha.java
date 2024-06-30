@@ -25,7 +25,7 @@ public class Kamehameha {
     private boolean active;
     private float cooldownTimer;
     private static final float COOLDOWN_DURATION = 5.0f;
-    private static final float ACTIVE_DURATION = 1.0f; // 0.5 seconds
+    private static final float ACTIVE_DURATION = 1.0f;
     private float activeTimer;
     private ShapeRenderer shapeRenderer =new ShapeRenderer();
 
