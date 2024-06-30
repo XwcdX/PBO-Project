@@ -55,6 +55,8 @@ public class bhr extends ApplicationAdapter {
 	public Animation<TextureRegion> crystalAnimationPink;
 	public Animation<TextureRegion> crystalAnimationGreen;
 	public Animation<TextureRegion> firebalAnimation;
+	public Animation <TextureRegion> undeadAnimation;
+	public Animation <TextureRegion> wizzardAnimation;
 	public Array<Crystal>crystals;
 
 	private Map<Enemies, Float> collisionTimes;
@@ -247,6 +249,28 @@ public class bhr extends ApplicationAdapter {
 
 		firebalAnimation = new Animation<>(0.1f,texture_region);
 		firebalAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+		//Enemy Load Here
+		Texture[] generateUndeadMelee = new Texture[20];
+		TextureRegion[] texture_region_enemy_melee = new TextureRegion[20];
+		for(int i = 0;i<20;i++){
+			String filename = String.format("Enemy_Melee_Run/tile%03d.png",i);
+			generateUndeadMelee[i] = new Texture(Gdx.files.internal(filename));
+			texture_region_enemy_melee[i] = new TextureRegion(generateUndeadMelee[i]);
+		}
+		undeadAnimation = new Animation<>(0.20f,texture_region_enemy_melee);
+		undeadAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+		Texture[] generateEnemyWizard = new Texture[8];
+		TextureRegion[] texture_region_enemy_wizard = new TextureRegion[8];
+		for(int i = 0;i<8;i++){
+			String filename = String.format("Run_Enemy_Wizzard/tile%03d.png",i);
+			generateEnemyWizard[i] = new Texture(Gdx.files.internal(filename));
+			texture_region_enemy_wizard[i] = new TextureRegion(generateEnemyWizard[i]);
+		}
+		wizzardAnimation = new Animation<>(0.20f,texture_region_enemy_wizard);
+		wizzardAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
 		/*
 		Make Texture Image
 		 */
