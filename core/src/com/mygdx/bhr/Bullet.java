@@ -22,7 +22,7 @@ public class Bullet {
     }
 
     public void update(float deltaTime) {
-        float speed = 100f;
+        float speed = 1000f;
         realPosition.x += direction.x * speed * deltaTime;
         realPosition.y += direction.y * speed * deltaTime;
 

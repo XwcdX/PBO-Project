@@ -1,7 +1,8 @@
 package com.mygdx.bhr;
 
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Intersector;
@@ -13,13 +14,13 @@ public class Guardian_Skill {
     private float tinyCircleRadius; // Radius of the tiny circles
     private float speed; // Rotation speed of the tiny circles
     private float angleOffset; // Initial angle offset
-    private Texture tinyCircleTexture; // Texture for the tiny circles
+    private Animation<TextureRegion> tinyCircleTexture; // Texture for the tiny circles
     private float[] tinyCircleAngles; // Angles of the tiny circles
     private Circle[] tinyCircles; // Circles for collision detection
     private int damage; // Damage dealt by the tiny circles
     private bhr game; // Reference to the game instance
-
-    public Guardian_Skill(Texture tinyCircleTexture, bhr game) {
+    private Animation<TextureRegion> circleAnimation;
+    public Guardian_Skill(Animation<TextureRegion> tinyCircleTexture, bhr game) {
         this.center = new Vector2();
         this.bigCircleRadius = 80;
         this.tinyCircleRadius = 20;
@@ -36,7 +37,7 @@ public class Guardian_Skill {
     }
 
     // Update the position and angles of the tiny circles
-    public void update(float deltaTime, Vector2 heroPosition) {
+    public void update(float deltaTime, Vector2 heroPosition,float animationTime) {
         center.set(heroPosition); // Set the center to the hero's position
         angleOffset += speed * deltaTime * 360; // Increment angle offset
 
@@ -51,9 +52,10 @@ public class Guardian_Skill {
     }
 
     // Draw the tiny circles on the screen
-    public void draw(SpriteBatch batch) {
+    public void draw(SpriteBatch batch,float animationTime) {
+        TextureRegion currentFrame = tinyCircleTexture.getKeyFrame(animationTime,true);
         for (Circle circle : tinyCircles) {
-            batch.draw(tinyCircleTexture, circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2);
+            batch.draw(currentFrame, circle.x - circle.radius, circle.y - circle.radius, circle.radius * 2, circle.radius * 2);
         }
     }
 

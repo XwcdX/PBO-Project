@@ -377,7 +377,7 @@ public class bhr extends ApplicationAdapter {
                     bullet.circle.x - bullet.circle.radius, bullet.circle.y - bullet.circle.radius,
                     bullet.circle.radius, bullet.circle.radius,
                     currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),
-                    0.3f, 0.3f,
+                    0.09f, 0.09f,
                     rotation,
                     0, 0,
                     currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),

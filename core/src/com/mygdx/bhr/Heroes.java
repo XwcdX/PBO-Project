@@ -5,7 +5,9 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
@@ -31,11 +33,11 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private Guardian_Skill guardianSkill;
     private Kamehameha kamehamehaSkill;
     private Mine_Bomb minebombSkill;
-    private final Texture tinyCircleTexture;
+    private final Animation<TextureRegion> tinyCircleTexture;
     private final Texture kamehamehaTexture;
     private final Texture minebombTexture;
     private final bhr game;
-
+    private float animationTime;
     public Heroes(int worldWidth, int worldHeight, Camera camera, bhr game) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
@@ -43,7 +45,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.hp = 100;
         this.exp = 0;
         this.level = 1;
-        this.ExpNeeded = 200;
+        this.ExpNeeded = 50;
         this.bullets = new Array<>();
         this.direction = new Vector2(0, 0);
         this.lastDirection = new Vector2(1, 0);
@@ -51,7 +53,17 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.lvlUps = Gdx.audio.newSound(Gdx.files.internal("Audio/achievement.wav"));
         this.camera = camera;
         this.skills = new HashSet<>();
-        this.tinyCircleTexture = new Texture(Gdx.files.internal("skull_icon.png"));
+        Texture[] generateCircle = new Texture[60];
+        TextureRegion[] textureRegions = new TextureRegion[60];
+        for(int i=0;i<60;i++){
+            String filename = String.format("electric_shield_60fps/Effect_ElectricShield_1_%03d.png", i);
+            generateCircle[i] = new Texture(Gdx.files.internal(filename));
+            textureRegions[i] = new TextureRegion(generateCircle[i]);
+        }
+        this.tinyCircleTexture= new Animation<>(0.16f,textureRegions);
+        this.tinyCircleTexture.setPlayMode(Animation.PlayMode.LOOP);
+        animationTime = 0;
+
         this.kamehamehaTexture = new Texture(Gdx.files.internal("deathText.png"));
         this.minebombTexture = new Texture(Gdx.files.internal("restart_button.png"));
         this.game = game;
@@ -107,9 +119,9 @@ public class Heroes implements hasHP, canShoot, hasExp {
                 iter.remove();
             }
         }
-
+        animationTime += deltaTime;
         if (guardianSkill != null) {
-            guardianSkill.update(deltaTime, new Vector2(getX() + polygon.getBoundingRectangle().width / 2, getY() + polygon.getBoundingRectangle().height / 2));
+            guardianSkill.update(deltaTime, new Vector2(getX() + polygon.getBoundingRectangle().width / 2, getY() + polygon.getBoundingRectangle().height / 2),animationTime);
         }
 
         if (kamehamehaSkill != null) {
@@ -221,7 +233,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
 
     public void drawSkills(SpriteBatch batch) {
         if (guardianSkill != null) {
-            guardianSkill.draw(batch);
+            guardianSkill.draw(batch,animationTime);
         }
         if (kamehamehaSkill != null) {
             kamehamehaSkill.draw(batch);
@@ -232,7 +244,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
     }
 
     public void checkAndAddSkills() {
-        if (level == 5 && hasSkill(Skill.GUARDIAN)) {
+        if (level == 2 && hasSkill(Skill.GUARDIAN)) {
             addSkill(Skill.GUARDIAN);
             addGuardianSkill();
             System.out.println("Skill acquired: Guardian");
