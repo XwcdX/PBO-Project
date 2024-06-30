@@ -57,6 +57,7 @@ public class bhr extends ApplicationAdapter {
 	public Animation<TextureRegion> firebalAnimation;
 	public Animation <TextureRegion> undeadAnimation;
 	public Animation <TextureRegion> wizzardAnimation;
+	public Animation <TextureRegion> bomberAnimation;
 	public Array<Crystal>crystals;
 
 	private Map<Enemies, Float> collisionTimes;
@@ -270,6 +271,15 @@ public class bhr extends ApplicationAdapter {
 		}
 		wizzardAnimation = new Animation<>(0.20f,texture_region_enemy_wizard);
 		wizzardAnimation.setPlayMode(Animation.PlayMode.LOOP);
+		Texture[] generateEnemyBomber = new Texture[9];
+		TextureRegion[] texture_region_enemy_bomber = new TextureRegion[9];
+		for(int i =0;i<9;i++){
+			String filename = String.format("Bomber Run/tile%03d.png",i);
+			generateEnemyBomber[i] = new Texture(Gdx.files.internal(filename));
+			texture_region_enemy_bomber[i] = new TextureRegion(generateEnemyBomber[i]);
+		}
+		bomberAnimation = new Animation<>(0.20f,texture_region_enemy_bomber);
+		bomberAnimation.setPlayMode(Animation.PlayMode.LOOP);
 
 		/*
 		Make Texture Image
