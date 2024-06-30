@@ -55,6 +55,10 @@ public class bhr extends ApplicationAdapter {
 	public Animation<TextureRegion> crystalAnimationPink;
 	public Animation<TextureRegion> crystalAnimationGreen;
 	public Animation<TextureRegion> firebalAnimation;
+	public Animation <TextureRegion> undeadAnimation;
+	public Animation <TextureRegion> wizzardAnimation;
+	public Animation <TextureRegion> bomberAnimation;
+	public Animation <TextureRegion> bossAnimation;
 	public Array<Crystal>crystals;
 
 	private Map<Enemies, Float> collisionTimes;
@@ -64,7 +68,7 @@ public class bhr extends ApplicationAdapter {
 	private int currentRandomBound = 1;
 	private int minute = 0;
 	Array<Enemies> summonedEnemies = new Array<>();
-
+	private float stateTime = 0;
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		Polygon bossPolygon;
@@ -182,6 +186,40 @@ public class bhr extends ApplicationAdapter {
 		}
 	}
 
+
+	private void drawWrapped(Animation<TextureRegion> animation, Polygon polygon, float stateTime) {
+		TextureRegion texture = animation.getKeyFrame(stateTime, true);
+		float[] vertices = polygon.getTransformedVertices();
+		float width = texture.getRegionWidth();
+		float height = texture.getRegionHeight();
+
+		batch.draw(texture, vertices[0], vertices[1]);
+		if (vertices[0] < camera.position.x - camera.viewportWidth / 2) {
+			batch.draw(texture, vertices[0] + WORLD_WIDTH, vertices[1]);
+		}
+		if (vertices[0] + width > camera.position.x + camera.viewportWidth / 2) {
+			batch.draw(texture, vertices[0] - WORLD_WIDTH, vertices[1]);
+		}
+		if (vertices[1] < camera.position.y - camera.viewportHeight / 2) {
+			batch.draw(texture, vertices[0], vertices[1] + WORLD_HEIGHT);
+		}
+		if (vertices[1] + height > camera.position.y + camera.viewportHeight / 2) {
+			batch.draw(texture, vertices[0], vertices[1] - WORLD_HEIGHT);
+		}
+
+		if (vertices[0] < camera.position.x - camera.viewportWidth / 2 && vertices[1] < camera.position.y - camera.viewportHeight / 2) {
+			batch.draw(texture, vertices[0] + WORLD_WIDTH, vertices[1] + WORLD_HEIGHT);
+		}
+		if (vertices[0] < camera.position.x - camera.viewportWidth / 2 && vertices[1] + height > camera.position.y + camera.viewportHeight / 2) {
+			batch.draw(texture, vertices[0] + WORLD_WIDTH, vertices[1] - WORLD_HEIGHT);
+		}
+		if (vertices[0] + width > camera.position.x + camera.viewportWidth / 2 && vertices[1] < camera.position.y - camera.viewportHeight / 2) {
+			batch.draw(texture, vertices[0] - WORLD_WIDTH, vertices[1] + WORLD_HEIGHT);
+		}
+		if (vertices[0] + width > camera.position.x + camera.viewportWidth / 2 && vertices[1] + height > camera.position.y + camera.viewportHeight / 2) {
+			batch.draw(texture, vertices[0] - WORLD_WIDTH, vertices[1] - WORLD_HEIGHT);
+		}
+	}
 	void spawnCrystals(Enemies enemy) {
 		Random rand = new Random();
 		int exp = rand.nextInt(51);
@@ -247,6 +285,47 @@ public class bhr extends ApplicationAdapter {
 
 		firebalAnimation = new Animation<>(0.1f,texture_region);
 		firebalAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+		//Enemy Load Here
+		Texture[] generateUndeadMelee = new Texture[20];
+		TextureRegion[] texture_region_enemy_melee = new TextureRegion[20];
+		for(int i = 0;i<20;i++){
+			String filename = String.format("Enemy_Melee_Run/tile%03d.png",i);
+			generateUndeadMelee[i] = new Texture(Gdx.files.internal(filename));
+			texture_region_enemy_melee[i] = new TextureRegion(generateUndeadMelee[i]);
+		}
+		undeadAnimation = new Animation<>(0.20f,texture_region_enemy_melee);
+		undeadAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+		Texture[] generateEnemyWizard = new Texture[8];
+		TextureRegion[] texture_region_enemy_wizard = new TextureRegion[8];
+		for(int i = 0;i<8;i++){
+			String filename = String.format("Run_Enemy_Wizzard/tile%03d.png",i);
+			generateEnemyWizard[i] = new Texture(Gdx.files.internal(filename));
+			texture_region_enemy_wizard[i] = new TextureRegion(generateEnemyWizard[i]);
+		}
+		wizzardAnimation = new Animation<>(0.20f,texture_region_enemy_wizard);
+		wizzardAnimation.setPlayMode(Animation.PlayMode.LOOP);
+		Texture[] generateEnemyBomber = new Texture[9];
+		TextureRegion[] texture_region_enemy_bomber = new TextureRegion[9];
+		for(int i =0;i<9;i++){
+			String filename = String.format("Bomber Run/tile%03d.png",i);
+			generateEnemyBomber[i] = new Texture(Gdx.files.internal(filename));
+			texture_region_enemy_bomber[i] = new TextureRegion(generateEnemyBomber[i]);
+		}
+		bomberAnimation = new Animation<>(0.20f,texture_region_enemy_bomber);
+		bomberAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
+		Texture[] generateBoss = new Texture[8];
+		TextureRegion[] texture_region_enemy_boss = new TextureRegion[8];
+		for(int i =0;i<8;i++){
+			String filename = String.format("Boss Walk/tile%03d.png",i);
+			generateBoss[i] = new Texture(Gdx.files.internal(filename));
+			texture_region_enemy_boss[i] = new TextureRegion(generateBoss[i]);
+		}
+		bossAnimation = new Animation<>(0.20f,texture_region_enemy_boss);
+		bossAnimation.setPlayMode(Animation.PlayMode.LOOP);
+
 		/*
 		Make Texture Image
 		 */
@@ -331,6 +410,7 @@ public class bhr extends ApplicationAdapter {
 	boolean paused;
 	@Override
 	public void render() {
+		stateTime += Gdx.graphics.getDeltaTime();
         ScreenUtils.clear(0, 0, 0.2f, 1);
 
         if (paused) {
@@ -361,13 +441,13 @@ public class bhr extends ApplicationAdapter {
 
         for (Enemies enemy : enemies) {
 			if (enemy instanceof Long_Enemy){
-				drawWrapped(longEnemyImage, enemy.polygon);
+				drawWrapped(wizzardAnimation, enemy.polygon,stateTime);
 			} else if (enemy instanceof Bomber_Enemy) {
-				drawWrapped(longEnemyImage, enemy.polygon);
+				drawWrapped(bossAnimation, enemy.polygon,stateTime);
 			} else if(enemy instanceof BossSpawner_Enemy){
-				drawWrapped(enemyImage, enemy.polygon);
+				drawWrapped(bossAnimation, enemy.polygon,stateTime);
 			} else {
-				drawWrapped(enemyImage, enemy.polygon);
+				drawWrapped(undeadAnimation, enemy.polygon,stateTime);
 			}
         }
 
