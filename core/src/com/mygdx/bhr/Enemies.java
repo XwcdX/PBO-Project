@@ -28,6 +28,7 @@ public class Enemies implements hasHP {
 
         wrapAroundWorld();
     }
+
     protected Vector2 shortestDirection(Polygon from, Polygon to) {
         Vector2 fromCenter = new Vector2(from.getBoundingRectangle().x + from.getBoundingRectangle().width / 2, from.getBoundingRectangle().y + from.getBoundingRectangle().height / 2);
         Vector2 toCenter = new Vector2(to.getBoundingRectangle().x + to.getBoundingRectangle().width / 2, to.getBoundingRectangle().y + to.getBoundingRectangle().height / 2);

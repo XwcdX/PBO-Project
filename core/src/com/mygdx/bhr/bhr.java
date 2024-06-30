@@ -390,7 +390,7 @@ public class bhr extends ApplicationAdapter {
 			for (Iterator<Enemies> iterEnemy = enemies.iterator(); iterEnemy.hasNext(); ) {
 				Enemies enemy = iterEnemy.next();
 				if (Intersector.overlaps(bullet.circle, enemy.polygon.getBoundingRectangle())) {
-					enemy.takeDamage(50);
+					enemy.takeDamage(hero_atk);
 					if (!enemy.isAlive()) {
 						spawnCrystals(enemy); // Function to handle crystal spawning
 						iterEnemy.remove();
