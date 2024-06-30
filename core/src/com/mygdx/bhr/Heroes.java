@@ -41,6 +41,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
     public Heroes(int worldWidth, int worldHeight, Camera camera, bhr game) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
+//        this.playerAnimation = playerAnimation;
         this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 32, (float) WORLD_HEIGHT / 2 - 32, 64, 64);
         this.hp = 100;
         this.exp = 0;
