@@ -34,7 +34,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private Kamehameha kamehamehaSkill;
     private Mine_Bomb minebombSkill;
     private final Animation<TextureRegion> tinyCircleTexture;
-    private final Texture kamehamehaTexture;
+    private final Animation<TextureRegion> kamehamehaTexture;
     private final Texture minebombTexture;
     private final bhr game;
     private float animationTime;
@@ -63,8 +63,15 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.tinyCircleTexture= new Animation<>(0.16f,textureRegions);
         this.tinyCircleTexture.setPlayMode(Animation.PlayMode.LOOP);
         animationTime = 0;
-
-        this.kamehamehaTexture = new Texture(Gdx.files.internal("deathText.png"));
+        Texture[] generateKameha= new Texture[12];
+        TextureRegion[] textureRegions1 = new TextureRegion[12];
+        for(int i=0;i<12;i++){
+            String filename = String.format("Kameha_Animation/tile%03d.png", i);
+            generateKameha[i] = new Texture(Gdx.files.internal(filename));
+            textureRegions1[i] = new TextureRegion(generateKameha[i]);
+        }
+        this.kamehamehaTexture = new Animation<>(0.20f,textureRegions1);
+        this.kamehamehaTexture.setPlayMode(Animation.PlayMode.LOOP);
         this.minebombTexture = new Texture(Gdx.files.internal("restart_button.png"));
         this.game = game;
     }
@@ -244,7 +251,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
     }
 
     public void checkAndAddSkills() {
-        if (level == 2 && hasSkill(Skill.GUARDIAN)) {
+        if (level == 5 && hasSkill(Skill.GUARDIAN)) {
             addSkill(Skill.GUARDIAN);
             addGuardianSkill();
             System.out.println("Skill acquired: Guardian");
