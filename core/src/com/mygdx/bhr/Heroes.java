@@ -315,7 +315,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         }
         if (level == 9 && !level3guardian) {
             guardianSkill.setNumberOfCircles(5);
-            guardianSkill.setSpeed(.2f);
+            guardianSkill.setSpeed(.4f);
             modal.show("Skill Upgraded : Ancient Guard", 2f);
             level3guardian = true;
         }
