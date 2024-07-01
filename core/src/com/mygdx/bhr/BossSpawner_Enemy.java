@@ -56,5 +56,11 @@ public class BossSpawner_Enemy extends Enemies {
             summonEnemies(heroPolygon);
             resetStateTime();
         }
+        stateTime += deltaTime;
+
+        if (doneCollision) {
+            lastCollision += deltaTime;
+            checkCollision();
+        }
     }
 }

@@ -30,6 +30,13 @@ public class Bomber_Enemy extends Enemies {
             plantBomb(heroPolygon);
             timeSinceLastBomb = 0f;
         }
+        stateTime += deltaTime;
+
+        if (doneCollision) {
+            lastCollision += deltaTime;
+            checkCollision();
+        }
+
     }
 
     private void plantBomb(Polygon heroPolygon) {

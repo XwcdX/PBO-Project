@@ -7,11 +7,13 @@ public class Enemies implements hasHP {
     Polygon polygon;
     Vector2 velocity;
     protected final int WORLD_WIDTH;
+    protected int ATTACK_DAMAGE = 10;
+    protected boolean attack = false;
     protected final int WORLD_HEIGHT;
     private int hp;
-    private float stateTime;
-    private boolean doneCollision;
-    private float lastCollision;
+    protected float stateTime;
+    protected boolean doneCollision;
+    protected float lastCollision;
 
     public Enemies(Polygon polygon, int worldWidth, int worldHeight) {
         this.polygon = polygon;
@@ -110,11 +112,10 @@ public class Enemies implements hasHP {
         stateTime = 0f;
     }
 
-    private void checkCollision(){
+    protected void checkCollision(){
         if (lastCollision >= 1f){
             doneCollision = false;
             lastCollision=0;
         }
     }
-
 }

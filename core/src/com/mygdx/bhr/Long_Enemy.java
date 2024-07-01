@@ -30,6 +30,13 @@ public class Long_Enemy extends Enemies {
             shootBullet(heroPolygon);
             timeSinceLastShot = 0f;
         }
+
+        stateTime += deltaTime;
+
+        if (doneCollision) {
+            lastCollision += deltaTime;
+            checkCollision();
+        }
     }
 
     private void shootBullet(Polygon heroPolygon) {

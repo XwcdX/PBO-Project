@@ -114,13 +114,13 @@ public class bhr extends ApplicationAdapter {
 		}
 
 		if (minutes < 3) {
-			enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			enemies.add(new Melee_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 		} else if (minutes < 4) {
 			// 25% chance for Long_Enemy, 75% chance for regular Enemies
 			if (randomValue == 3) {
 				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			} else {
-				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+				enemies.add(new Melee_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			}
 		} else if (minutes < 6) {
 			// 16.6% chance for Bomber_Enemy, 33.3% chance for Long_Enemy, 50% chance for regular Enemies
@@ -129,7 +129,7 @@ public class bhr extends ApplicationAdapter {
 			} else if (randomValue >= 3 && randomValue <= 4) {
 				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			} else {
-				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+				enemies.add(new Melee_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			}
 		} else {
 			// 5% chance for Boss 20% chance for Bomber_Enemy, 30% chance for Long_Enemy, 45% chance for regular Enemies
@@ -141,7 +141,7 @@ public class bhr extends ApplicationAdapter {
 			} else if (randomValue >= 45) {
 				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			} else {
-				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+				enemies.add(new Melee_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			}
 		}
 
@@ -569,6 +569,12 @@ public class bhr extends ApplicationAdapter {
 				enemies.addAll(summonedEnemies);
 				summonedEnemies.clear();
 			}
+			if (enemy instanceof Melee_Enemy){
+				if (enemy.attack){
+					hero.takeDamage(enemy.ATTACK_DAMAGE);
+					enemy.attack = false;
+				}
+			}
         }
 
 		if (hero.getLevel() % 4 == 0 && hero.getLevel() > 4){
@@ -660,6 +666,7 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 		if (!hero.isAlive()) {
+			System.out.println("hero mati");
 			dispose();
 		}
 	}
