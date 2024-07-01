@@ -45,12 +45,12 @@ public class bhr extends ApplicationAdapter {
 
 	private Sound death_sound;
 	private static boolean soundPlayed = false;
-	private boolean dead;
+	private boolean dead = false;
 
 	//stats
 	private int spawntime = 1000000000;
 	private int hero_atk = 30;
-	private int enemy_atk = 5;
+	private int enemy_atk = 15;
 
 	private final int WORLD_WIDTH = 3000;
 	private final int WORLD_HEIGHT = 3000;
@@ -439,7 +439,7 @@ public class bhr extends ApplicationAdapter {
 		stateTime += Gdx.graphics.getDeltaTime();
         ScreenUtils.clear(0, 0, 0.2f, 1);
 
-        if (paused) {
+        if (paused || dead) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isTouched()) {
                 paused = false;
                 try {
@@ -448,6 +448,11 @@ public class bhr extends ApplicationAdapter {
                     e.printStackTrace();
                 }
             }
+			if (dead){
+				if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
+					dispose();
+				}
+			}
         } else {
             GeneralUpdate();
             hero.update(Gdx.graphics.getDeltaTime());
@@ -518,15 +523,19 @@ public class bhr extends ApplicationAdapter {
 
         // Draw pause texture if paused
         if (paused) {
-            // Set color with alpha value for transparency (e.g., 0.5f for 50% transparency)
             batch.setColor(1, 1, 1, 0.5f);
-            // Draw pause texture to cover the entire screen
             float pauseX = camera.position.x - camera.viewportWidth / 2;
             float pauseY = camera.position.y - camera.viewportHeight / 2;
             batch.draw(pause, pauseX, pauseY, camera.viewportWidth, camera.viewportHeight);
-            // Reset color to white (fully opaque) for subsequent drawings
             batch.setColor(1, 1, 1, 1);
         }
+		if (dead) {
+			batch.setColor(1, 1, 1, 0.8f);
+			float deadx = camera.position.x - camera.viewportWidth / 2;
+			float deadY = camera.position.y - camera.viewportHeight / 2;
+			batch.draw(death_screen, deadx, deadY, camera.viewportWidth, camera.viewportHeight);
+			batch.setColor(1, 1, 1, 1);
+		}
 
         batch.end();
     }
@@ -535,12 +544,15 @@ public class bhr extends ApplicationAdapter {
 
 	public void GeneralUpdate(){
 
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
-			paused = true;
-			try{
-				Thread.sleep(100);
-			}catch (InterruptedException e){
-				e.printStackTrace();
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || dead){
+			if (!dead){
+				paused = true;
+			}else {
+				try{
+					Thread.sleep(100);
+				}catch (InterruptedException e){
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -612,7 +624,7 @@ public class bhr extends ApplicationAdapter {
 			Enemy_Bullet bullet = iter.next();
 			bullet.update(Gdx.graphics.getDeltaTime(),hero.polygon);
 			if (Intersector.overlaps(bullet.getBoundingCircle(), hero.polygon.getBoundingRectangle())) {
-				hero.takeDamage(10);
+				hero.takeDamage(enemy_atk-5);
 				iter.remove();
 			}
 			if (bullet.getTimeAlive() > Enemy_Bullet.LIFESPAN) {
@@ -625,7 +637,7 @@ public class bhr extends ApplicationAdapter {
 			bomb.update();
 			if (bomb.isExploded()) {
 				if (!bomb.hasHeroBeenDamaged() && Intersector.overlaps(bomb.getCircle(), hero.getPolygon().getBoundingRectangle())) {
-					hero.takeDamage(25);
+					hero.takeDamage(enemy_atk+10);
 					bomb.setHeroDamaged(true);
 				}
 
@@ -677,10 +689,6 @@ public class bhr extends ApplicationAdapter {
 			if (play){
 				death_sound.play();
 				play = false;
-			}
-
-			if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
-				dispose();
 			}
 		}
 	}
