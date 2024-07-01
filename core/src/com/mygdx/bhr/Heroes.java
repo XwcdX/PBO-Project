@@ -47,12 +47,13 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private boolean level3bomb;
     private boolean level3guardian;
     private boolean level3kamehameha;
+    boolean shoot;
 
     public Heroes(int worldWidth, int worldHeight, Camera camera, bhr game) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
 //        this.playerAnimation = playerAnimation;
-        this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 32, (float) WORLD_HEIGHT / 2 - 32, 64, 64);
+        this.polygon = createPolygon((float) WORLD_WIDTH / 2 - 16, (float) WORLD_HEIGHT / 2 - 24, 32, 48);
         this.hp = 100;
         this.exp = 0;
         this.level = 1;
@@ -92,6 +93,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.level3bomb = false;
         this.level3guardian = false;
         this.level3kamehameha = false;
+        this.shoot = false;
     }
 
     public Polygon getPolygon() {
@@ -120,9 +122,11 @@ public class Heroes implements hasHP, canShoot, hasExp {
         direction.nor(); // Normalize the direction vector to ensure consistent speed
 
         polygon.translate(direction.x * 300 * deltaTime, direction.y * 300 * deltaTime);
-
-        // Auto attack every 0.5 seconds (500,000,000 nanoseconds)
-        long attackInterval = 1000000000;
+        long attackInterval = 3000000000L;
+        long animationInterval = 2000000000L;
+        if (TimeUtils.nanoTime() - lastAttackTime > animationInterval) {
+            shoot = TimeUtils.nanoTime() - lastAttackTime <= attackInterval;
+        }
         if (TimeUtils.nanoTime() - lastAttackTime > attackInterval) {
             shoot();
             lastAttackTime = TimeUtils.nanoTime();

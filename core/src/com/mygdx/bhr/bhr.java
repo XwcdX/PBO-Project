@@ -9,15 +9,20 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.math.Intersector;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.graphics.g2d.Animation;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.GL20;
+import jdk.internal.classfile.impl.Util;
+import jdk.jfr.internal.Utils;
 
 
 public class bhr extends ApplicationAdapter {
+	private TextureAtlas heroAnimation;
 	private BitmapFont HP;
 	private BitmapFont EXP;
 	private BitmapFont LVL;
@@ -75,6 +80,8 @@ public class bhr extends ApplicationAdapter {
 	private int seconds = 0;
 	Array<Enemies> summonedEnemies = new Array<>();
 	private float stateTime = 0;
+	private String dir = ":)";
+	private Animation<TextureRegion> rightIdle, rightShoot, rightWalk, rightUpIdle, rightUpShoot, rightUpWalk, rightDownIdle, rightDownShoot, rightDownWalk,upIdle, upShoot, upWalk, leftIdle, leftShoot, leftWalk, leftUpIdle, leftUpShoot, leftUpWalk, leftDownIdle, leftDownShoot, leftDownWalk, downIdle, downShoot, downWalk;
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		Polygon bossPolygon;
@@ -192,6 +199,40 @@ public class bhr extends ApplicationAdapter {
 		}
 	}
 
+	private void drawWrapped(TextureRegion region, Polygon polygon) {
+		float[] vertices = polygon.getTransformedVertices();
+		float width = region.getRegionWidth();
+		float height = region.getRegionHeight();
+
+		batch.draw(region, vertices[0], vertices[1]);
+		if (vertices[0] < camera.position.x - camera.viewportWidth / 2) {
+			batch.draw(region, vertices[0] + WORLD_WIDTH, vertices[1]);
+		}
+		if (vertices[0] + width > camera.position.x + camera.viewportWidth / 2) {
+			batch.draw(region, vertices[0] - WORLD_WIDTH, vertices[1]);
+		}
+		if (vertices[1] < camera.position.y - camera.viewportHeight / 2) {
+			batch.draw(region, vertices[0], vertices[1] + WORLD_HEIGHT);
+		}
+		if (vertices[1] + height > camera.position.y + camera.viewportHeight / 2) {
+			batch.draw(region, vertices[0], vertices[1] - WORLD_HEIGHT);
+		}
+
+		if (vertices[0] < camera.position.x - camera.viewportWidth / 2 && vertices[1] < camera.position.y - camera.viewportHeight / 2) {
+			batch.draw(region, vertices[0] + WORLD_WIDTH, vertices[1] + WORLD_HEIGHT);
+		}
+		if (vertices[0] < camera.position.x - camera.viewportWidth / 2 && vertices[1] + height > camera.position.y + camera.viewportHeight / 2) {
+			batch.draw(region, vertices[0] + WORLD_WIDTH, vertices[1] - WORLD_HEIGHT);
+		}
+		if (vertices[0] + width > camera.position.x + camera.viewportWidth / 2 && vertices[1] < camera.position.y - camera.viewportHeight / 2) {
+			batch.draw(region, vertices[0] - WORLD_WIDTH, vertices[1] + WORLD_HEIGHT);
+		}
+		if (vertices[0] + width > camera.position.x + camera.viewportWidth / 2 && vertices[1] + height > camera.position.y + camera.viewportHeight / 2) {
+			batch.draw(region, vertices[0] - WORLD_WIDTH, vertices[1] - WORLD_HEIGHT);
+		}
+	}
+
+
 
 	private void drawWrapped(Animation<TextureRegion> animation, Polygon polygon, float stateTime) {
 		TextureRegion texture = animation.getKeyFrame(stateTime, true);
@@ -254,11 +295,87 @@ public class bhr extends ApplicationAdapter {
 			crystals.add(new Crystal(enemy.polygon.getX(), enemy.polygon.getY(), 28, 28, crystalAnimationGreen, 28));
 		}
 	}
+	private Animation<TextureRegion> createHeroAnimation(String name, float frameDuration) {
+		Array<TextureRegion> frames = new Array<>();
+		for (int i = 0; i < 6; i++) { // Assuming 6 frames per animation
+			TextureRegion region = heroAnimation.findRegion(name, i);
+			if (region != null) {
+				frames.add(region);
+			} else {
+				System.out.println("Region not found: " + name + " " + i);
+			}
+		}
+		return new Animation<>(frameDuration, frames);
+	}
+
+	public Animation<TextureRegion> updateShootingAnimation() {
+		if (hero.shoot) {
+			// Get the center of the camera
+			Vector3 cameraCenter = new Vector3(camera.position.x, camera.position.y, 0);
+
+			// Get the mouse position and unproject it to world coordinates
+			Vector3 mousePosition3 = new Vector3(Gdx.input.getX(), Gdx.input.getY(), 0);
+			camera.unproject(mousePosition3);
+			Vector2 mousePosition = new Vector2(mousePosition3.x, mousePosition3.y);
+
+			// Calculate the direction vector from the camera center to the mouse position
+			Vector2 direction = new Vector2(mousePosition.x - cameraCenter.x, mousePosition.y - cameraCenter.y);
+
+			// Determine the angle of the direction vector
+			float angle = direction.angleDeg();
+
+			// Determine the appropriate animation based on the angle
+			if (angle >= 68 && angle <= 112) {
+				return upShoot;
+			} else if (angle >= 23 && angle <= 67) {
+				return rightUpShoot;
+			} else if (angle >= 293 && angle <= 337) {
+				return rightDownShoot;
+			} else if (angle >= 158 && angle <= 202) {
+				return leftShoot;
+			} else if (angle >= 113 && angle <= 157) {
+				return leftUpShoot;
+			} else if (angle >= 203 && angle <= 247) {
+				return leftDownShoot;
+			}  else if (angle >= 248 && angle <= 292) {
+				return downShoot;
+			} else {
+				return rightShoot;
+			}
+		}
+        return null;
+    }
 
 	@Override
 	public void create() {
 
 		mapImage = new Texture(Gdx.files.internal("full_finished_map.png"));
+
+		heroAnimation = new TextureAtlas(Gdx.files.internal("Hero Animation/PBOHero.atlas"));
+		rightIdle = createHeroAnimation("right_idle", 0.2f);
+		rightShoot = createHeroAnimation("right_shoot", 1f);
+		rightWalk = createHeroAnimation("right_walk", 0.2f);
+		upIdle = createHeroAnimation("up_idle", 0.2f);
+		upShoot = createHeroAnimation("up_shoot", 1f);
+		upWalk = createHeroAnimation("up_walk", 0.2f);
+		downIdle = createHeroAnimation("down_idle", 0.2f);
+		downShoot = createHeroAnimation("down_shoot", 1f);
+		downWalk = createHeroAnimation("down_walk", 0.2f);
+		leftIdle = createHeroAnimation("left_idle", 0.2f);
+		leftShoot = createHeroAnimation("left_shoot", 1f);
+		leftWalk = createHeroAnimation("left_walk", 0.2f);
+		rightUpIdle = createHeroAnimation("right_up_idle", 0.2f);
+		rightUpShoot = createHeroAnimation("right_up_shoot", 1f);
+		rightUpWalk = createHeroAnimation("right_up_walk", 0.2f);
+		rightDownIdle = createHeroAnimation("right_down_idle", 0.2f);
+		rightDownShoot = createHeroAnimation("right_down_shoot", 1f);
+		rightDownWalk = createHeroAnimation("right_down_walk", 0.2f);
+		leftUpIdle = createHeroAnimation("up_left_idle", 0.2f);
+		leftUpShoot = createHeroAnimation("up_left_shoot", 1f);
+		leftUpWalk = createHeroAnimation("up_left_walk", 0.2f);
+		leftDownIdle = createHeroAnimation("down_left_idle", 0.2f);
+		leftDownShoot = createHeroAnimation("down_left_shoot", 1f);
+		leftDownWalk = createHeroAnimation("down_left_walk", 0.2f);
 
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
 		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -423,13 +540,78 @@ public class bhr extends ApplicationAdapter {
 	boolean paused;
 	@Override
 	public void render() {
+		stateTime += Gdx.graphics.getDeltaTime();
+		Animation<TextureRegion> currentAnimation = rightIdle;
+        switch (dir) {
+            case "up":
+                currentAnimation = upIdle;
+                break;
+            case "down":
+                currentAnimation = downIdle;
+                break;
+            case "left":
+                currentAnimation = leftIdle;
+                break;
+            case "ru":
+                currentAnimation = rightUpIdle;
+                break;
+            case "rd":
+                currentAnimation = rightDownIdle;
+                break;
+            case "lu":
+                currentAnimation = leftUpIdle;
+                break;
+            case "ld":
+                currentAnimation = leftDownIdle;
+                break;
+			default:
+        }
+
+		List<Integer> activeKeys = new ArrayList<>();
+
+		if (Gdx.input.isKeyPressed(Input.Keys.A)) activeKeys.add(Input.Keys.A);
+		if (Gdx.input.isKeyPressed(Input.Keys.W)) activeKeys.add(Input.Keys.W);
+		if (Gdx.input.isKeyPressed(Input.Keys.D)) activeKeys.add(Input.Keys.D);
+		if (Gdx.input.isKeyPressed(Input.Keys.S)) activeKeys.add(Input.Keys.S);
+
+		if (activeKeys.size() >= 2) {
+			if (activeKeys.contains(Input.Keys.A) && activeKeys.contains(Input.Keys.W)) {
+				currentAnimation = leftUpWalk;
+				dir = "lu";
+			} else if (activeKeys.contains(Input.Keys.A) && activeKeys.contains(Input.Keys.S)) {
+				currentAnimation = leftDownWalk;
+				dir = "ld";
+			} else if (activeKeys.contains(Input.Keys.D) && activeKeys.contains(Input.Keys.W)) {
+				currentAnimation = rightUpWalk;
+				dir = "ru";
+			} else if (activeKeys.contains(Input.Keys.D) && activeKeys.contains(Input.Keys.S)) {
+				currentAnimation = rightDownWalk;
+				dir = "rd";
+			}
+		} else if (activeKeys.size() == 1) {
+			int key = activeKeys.get(0);
+			if (key == Input.Keys.D) {
+				currentAnimation = rightWalk;
+			} else if (key == Input.Keys.W) {
+				currentAnimation = upWalk;
+				dir = "up";
+			} else if (key == Input.Keys.A) {
+				currentAnimation = leftWalk;
+				dir = "left";
+			} else if (key == Input.Keys.S) {
+				currentAnimation = downWalk;
+				dir = "down";
+			}
+		}
+		if (updateShootingAnimation() != null){
+			currentAnimation = updateShootingAnimation();
+		}
 		float deltaTime2 = Gdx.graphics.getDeltaTime();
 		updateTimer(deltaTime2);
 
-		stateTime += Gdx.graphics.getDeltaTime();
-        ScreenUtils.clear(0, 0, 0.2f, 1);
+		ScreenUtils.clear(0, 0, 0.2f, 1);
 
-        if (paused) {
+		if (paused) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isTouched()) {
                 paused = false;
                 try {
@@ -442,7 +624,7 @@ public class bhr extends ApplicationAdapter {
             GeneralUpdate();
             hero.update(Gdx.graphics.getDeltaTime());
         }
-
+		TextureRegion currentHeroFrame = currentAnimation.getKeyFrame(stateTime,true);
         // Update camera position
         camera.position.set(hero.getX() + 32, hero.getY() + 32, 0);
         camera.update();
@@ -453,7 +635,7 @@ public class bhr extends ApplicationAdapter {
         batch.begin();
 		batch.draw(mapImage, -3000, -3000, 9000, 9000);
         // Draw hero and other entities
-        drawWrapped(heroImage, hero.polygon);
+        drawWrapped(currentHeroFrame, hero.polygon);
 
 		for (Enemies enemy : enemies) {
 			if (enemy instanceof Long_Enemy){
