@@ -1,20 +1,30 @@
 package com.mygdx.bhr;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Polygon;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
+
+import javax.sound.sampled.*;
 
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
@@ -33,6 +43,10 @@ public class bhr extends ApplicationAdapter {
 	private Array<Enemies> enemies;
 	private long lastSpawnTime;
 
+	private Sound death_sound;
+	private static boolean soundPlayed = false;
+	private boolean dead;
+
 	//stats
 	private int spawntime = 1000000000;
 	private int hero_atk = 30;
@@ -50,6 +64,8 @@ public class bhr extends ApplicationAdapter {
 	private Texture[] generateFireballImg;
 	private Texture texture_pause;
 	private Sprite pause;
+	private Texture texture_death_screen;
+	private Sprite death_screen;
 	public Animation<TextureRegion> crystalAnimationRed;
 	public Animation<TextureRegion> crystalAnimationBlue;
 	public Animation<TextureRegion> crystalAnimationPurple;
@@ -253,6 +269,8 @@ public class bhr extends ApplicationAdapter {
 	@Override
 	public void create() {
 
+		death_sound = Gdx.audio.newSound(Gdx.files.internal("audio/death_sound.mp3"));
+
 		mapImage = new Texture(Gdx.files.internal("full_finished_map.png"));
 
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
@@ -269,6 +287,9 @@ public class bhr extends ApplicationAdapter {
 
 		texture_pause = new Texture(Gdx.files.internal("Pause screen.jpg"));
 		pause = new Sprite(texture_pause);
+
+		texture_death_screen = new Texture(Gdx.files.internal("game_over.jpg"));
+		death_screen = new Sprite(texture_death_screen);
 
 		enemyS = Gdx.audio.newSound(Gdx.files.internal("attack.wav"));
 
@@ -510,6 +531,7 @@ public class bhr extends ApplicationAdapter {
         batch.end();
     }
 
+	boolean play = true;
 
 	public void GeneralUpdate(){
 
@@ -551,7 +573,7 @@ public class bhr extends ApplicationAdapter {
                 if (collisionTime >= 1f) {
 					if (!enemy.isDoneCollision()){
 						enemyS.play();
-						hero.takeDamage(5);
+						hero.takeDamage(enemy_atk);
 						enemy.setDoneCollision(true);
 					}
                 }
@@ -650,8 +672,16 @@ public class bhr extends ApplicationAdapter {
 				}
 			}
 		}
-		if (!hero.isAlive()) {
-			dispose();
+		if (hero.getHP() <= 0) {
+			dead = true;
+			if (play){
+				death_sound.play();
+				play = false;
+			}
+
+			if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
+				dispose();
+			}
 		}
 	}
 
