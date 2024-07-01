@@ -99,8 +99,6 @@ public class bhr extends ApplicationAdapter {
 		Polygon enemyPolygon;
 		Polygon bossPolygon;
 		boolean isOverlapping;
-		int safetyCounter = 0;
-		final int MAX_TRIES = 100;
 
 		// Create a new enemy polygon, ensuring it does not overlap with existing enemies
 		do {
@@ -113,12 +111,6 @@ public class bhr extends ApplicationAdapter {
 					isOverlapping = true;
 					break;
 				}
-			}
-
-			safetyCounter++;
-			if (safetyCounter > MAX_TRIES) {
-				// Exit the loop to avoid infinite loop if no suitable position is found
-				break;
 			}
 		} while (isOverlapping);
 
@@ -134,7 +126,7 @@ public class bhr extends ApplicationAdapter {
 		}
 
 		if (minute < 3) {
-			enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+			enemies.add(new Melee_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 		} else if (minute < 4) {
 			// 25% chance for Long_Enemy, 75% chance for regular Enemies
 			if (randomValue == 3) {
