@@ -439,17 +439,17 @@ public class bhr extends ApplicationAdapter {
         // Draw hero and other entities
         drawWrapped(heroImage, hero.polygon);
 
-        for (Enemies enemy : enemies) {
+		for (Enemies enemy : enemies) {
 			if (enemy instanceof Long_Enemy){
-				drawWrapped(wizzardAnimation, enemy.polygon,stateTime);
+				drawWrapped(wizzardAnimation, enemy.polygon, stateTime);
 			} else if (enemy instanceof Bomber_Enemy) {
-				drawWrapped(bossAnimation, enemy.polygon,stateTime);
+				drawWrapped(bossAnimation, enemy.polygon, stateTime);
 			} else if(enemy instanceof BossSpawner_Enemy){
-				drawWrapped(bossAnimation, enemy.polygon,stateTime);
+				drawWrapped(bossAnimation, enemy.polygon, stateTime);
 			} else {
-				drawWrapped(undeadAnimation, enemy.polygon,stateTime);
+				drawWrapped(undeadAnimation, enemy.polygon, stateTime);
 			}
-        }
+		}
 
 		for (Enemy_Bullet bullet : enemyBullets) {
 			batch.draw(bulletImage, bullet.getPosition().x, bullet.getPosition().y);
