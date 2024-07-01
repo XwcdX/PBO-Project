@@ -11,8 +11,9 @@ public class DesktopLauncher {
 		config.useVsync(true);
 
 		// Set to fullscreen mode
-		Graphics.DisplayMode displayMode = Lwjgl3ApplicationConfiguration.getDisplayMode();
-		config.setFullscreenMode(displayMode);
+//		Graphics.DisplayMode displayMode = Lwjgl3ApplicationConfiguration.getDisplayMode();
+//		config.setFullscreenMode(displayMode);
+		config.setWindowedMode(720,480);
 
 		new Lwjgl3Application(new bhr(), config);
 	}

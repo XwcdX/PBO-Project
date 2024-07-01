@@ -123,7 +123,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
 
         polygon.translate(direction.x * 300 * deltaTime, direction.y * 300 * deltaTime);
         long attackInterval = 3000000000L;
-        long animationInterval = 2000000000L;
+        long animationInterval = 2500000000L;
         if (TimeUtils.nanoTime() - lastAttackTime > animationInterval) {
             shoot = TimeUtils.nanoTime() - lastAttackTime <= attackInterval;
         }

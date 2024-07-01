@@ -5,7 +5,9 @@ import java.util.*;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
@@ -16,14 +18,16 @@ import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
-import com.badlogic.gdx.graphics.GL20;
-import jdk.internal.classfile.impl.Util;
-import jdk.jfr.internal.Utils;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Polygon;
 
+import javax.sound.sampled.*;
 
 public class bhr extends ApplicationAdapter {
 	private TextureAtlas heroAnimation;
 	private BitmapFont HP;
+	private BitmapFont Time_Survived;
 	private BitmapFont EXP;
 	private BitmapFont LVL;
 	private Texture enemyImage;
@@ -39,11 +43,14 @@ public class bhr extends ApplicationAdapter {
 	private Array<Enemies> enemies;
 	private long lastSpawnTime;
 
+	private Sound death_sound;
+	private static boolean soundPlayed = false;
+	private boolean dead = false;
+
 	//stats
 	private int spawntime = 1000000000;
-
 	private int hero_atk = 30;
-	private int enemy_atk = 5;
+	private int enemy_atk = 15;
 
 	private final int WORLD_WIDTH = 3000;
 	private final int WORLD_HEIGHT = 3000;
@@ -57,6 +64,8 @@ public class bhr extends ApplicationAdapter {
 	private Texture[] generateFireballImg;
 	private Texture texture_pause;
 	private Sprite pause;
+	private Texture texture_death_screen;
+	private Sprite death_screen;
 	public Animation<TextureRegion> crystalAnimationRed;
 	public Animation<TextureRegion> crystalAnimationBlue;
 	public Animation<TextureRegion> crystalAnimationPurple;
@@ -74,20 +83,24 @@ public class bhr extends ApplicationAdapter {
 	public static Array<Enemy_Bomb> enemyBombs = new Array<>();
 	private long lastBoundChangeTime = TimeUtils.nanoTime();
 	private int currentRandomBound = 1;
-	private BitmapFont TIME;
-	private float elapsedTime = 0f;
-	private int minutes = 0;
-	private int seconds = 0;
+	private int minute = 0;
 	Array<Enemies> summonedEnemies = new Array<>();
 	private float stateTime = 0;
 	private String dir = ":)";
 	private Animation<TextureRegion> rightIdle, rightShoot, rightWalk, rightUpIdle, rightUpShoot, rightUpWalk, rightDownIdle, rightDownShoot, rightDownWalk,upIdle, upShoot, upWalk, leftIdle, leftShoot, leftWalk, leftUpIdle, leftUpShoot, leftUpWalk, leftDownIdle, leftDownShoot, leftDownWalk, downIdle, downShoot, downWalk;
+
+	// time tracking
+	BitmapFont font;
+	Preferences prefs;
+	float elapsedTime;
+	float longestTime;
+
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		Polygon bossPolygon;
 		boolean isOverlapping;
 		int safetyCounter = 0;
-		final int MAX_TRIES = 1000;
+		final int MAX_TRIES = 100;
 
 		// Create a new enemy polygon, ensuring it does not overlap with existing enemies
 		do {
@@ -120,16 +133,16 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 
-		if (minutes < 3) {
-			enemies.add(new Melee_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
-		} else if (minutes < 4) {
+		if (minute < 3) {
+			enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
+		} else if (minute < 4) {
 			// 25% chance for Long_Enemy, 75% chance for regular Enemies
 			if (randomValue == 3) {
 				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			} else {
 				enemies.add(new Melee_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			}
-		} else if (minutes < 6) {
+		} else if (minute < 6) {
 			// 16.6% chance for Bomber_Enemy, 33.3% chance for Long_Enemy, 50% chance for regular Enemies
 			if (randomValue == 5) {
 				enemies.add(new Bomber_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
@@ -349,32 +362,39 @@ public class bhr extends ApplicationAdapter {
 	@Override
 	public void create() {
 
+		font = new BitmapFont();
+		prefs = Gdx.app.getPreferences("MyPreferences");
+		elapsedTime = 0;
+		longestTime = prefs.getFloat("longestTime", 0);
+
+		death_sound = Gdx.audio.newSound(Gdx.files.internal("audio/death_sound.mp3"));
+
 		mapImage = new Texture(Gdx.files.internal("full_finished_map.png"));
 
 		heroAnimation = new TextureAtlas(Gdx.files.internal("Hero Animation/PBOHero.atlas"));
 		rightIdle = createHeroAnimation("right_idle", 0.2f);
-		rightShoot = createHeroAnimation("right_shoot", 1f);
+		rightShoot = createHeroAnimation("right_shoot", .5f);
 		rightWalk = createHeroAnimation("right_walk", 0.2f);
 		upIdle = createHeroAnimation("up_idle", 0.2f);
-		upShoot = createHeroAnimation("up_shoot", 1f);
+		upShoot = createHeroAnimation("up_shoot", .5f);
 		upWalk = createHeroAnimation("up_walk", 0.2f);
 		downIdle = createHeroAnimation("down_idle", 0.2f);
-		downShoot = createHeroAnimation("down_shoot", 1f);
+		downShoot = createHeroAnimation("down_shoot", .5f);
 		downWalk = createHeroAnimation("down_walk", 0.2f);
 		leftIdle = createHeroAnimation("left_idle", 0.2f);
-		leftShoot = createHeroAnimation("left_shoot", 1f);
+		leftShoot = createHeroAnimation("left_shoot", .5f);
 		leftWalk = createHeroAnimation("left_walk", 0.2f);
 		rightUpIdle = createHeroAnimation("right_up_idle", 0.2f);
-		rightUpShoot = createHeroAnimation("right_up_shoot", 1f);
+		rightUpShoot = createHeroAnimation("right_up_shoot", .5f);
 		rightUpWalk = createHeroAnimation("right_up_walk", 0.2f);
 		rightDownIdle = createHeroAnimation("right_down_idle", 0.2f);
-		rightDownShoot = createHeroAnimation("right_down_shoot", 1f);
+		rightDownShoot = createHeroAnimation("right_down_shoot", .5f);
 		rightDownWalk = createHeroAnimation("right_down_walk", 0.2f);
 		leftUpIdle = createHeroAnimation("up_left_idle", 0.2f);
-		leftUpShoot = createHeroAnimation("up_left_shoot", 1f);
+		leftUpShoot = createHeroAnimation("up_left_shoot", .5f);
 		leftUpWalk = createHeroAnimation("up_left_walk", 0.2f);
 		leftDownIdle = createHeroAnimation("down_left_idle", 0.2f);
-		leftDownShoot = createHeroAnimation("down_left_shoot", 1f);
+		leftDownShoot = createHeroAnimation("down_left_shoot", .5f);
 		leftDownWalk = createHeroAnimation("down_left_walk", 0.2f);
 
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
@@ -391,6 +411,9 @@ public class bhr extends ApplicationAdapter {
 
 		texture_pause = new Texture(Gdx.files.internal("Pause screen.jpg"));
 		pause = new Sprite(texture_pause);
+
+		texture_death_screen = new Texture(Gdx.files.internal("game_over.jpg"));
+		death_screen = new Sprite(texture_death_screen);
 
 		enemyS = Gdx.audio.newSound(Gdx.files.internal("attack.wav"));
 
@@ -524,17 +547,28 @@ public class bhr extends ApplicationAdapter {
 		HP = new BitmapFont();
 		EXP = new BitmapFont();
 		LVL = new BitmapFont();
-		TIME = new BitmapFont();
+		Time_Survived = new BitmapFont();
 		LVL.getData().setScale(1);
 		LVL.setColor(1,1,1,1);
 		EXP.getData().setScale(1);
 		EXP.setColor(1, 1, 1, 1);
 		HP.getData().setScale(1);
 		HP.setColor(1, 1, 1, 1);
-		TIME.getData().setScale(1.5f);
-		TIME.setColor(1, 1, 1, 1);
-		//startLibGDXTimer();
+		Time_Survived.getData().setScale(1);
+		Time_Survived.setColor(1, 1, 1, 1);
+
+
 		collisionTimes = new HashMap<>();
+	}
+
+
+	public void saveLongestTime(float time) {
+		prefs.putFloat("longestTime", time);
+		prefs.flush();
+	}
+
+	public float loadLongestTime() {
+		return prefs.getFloat("longestTime", 0);
 	}
 
 	boolean paused;
@@ -606,12 +640,14 @@ public class bhr extends ApplicationAdapter {
 		if (updateShootingAnimation() != null){
 			currentAnimation = updateShootingAnimation();
 		}
-		float deltaTime2 = Gdx.graphics.getDeltaTime();
-		updateTimer(deltaTime2);
+
+		float deltaTime_HS = Gdx.graphics.getDeltaTime();
+		elapsedTime += deltaTime_HS;
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 
-		if (paused) {
+        if (paused || dead) {
             if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isTouched()) {
                 paused = false;
                 try {
@@ -620,6 +656,11 @@ public class bhr extends ApplicationAdapter {
                     e.printStackTrace();
                 }
             }
+			if (dead){
+				if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
+					dispose();
+				}
+			}
         } else {
             GeneralUpdate();
             hero.update(Gdx.graphics.getDeltaTime());
@@ -634,6 +675,9 @@ public class bhr extends ApplicationAdapter {
 
         batch.begin();
 		batch.draw(mapImage, -3000, -3000, 9000, 9000);
+
+		font.draw(batch, "Elapsed Time: " + formatTime(elapsedTime),camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 70);
+
         // Draw hero and other entities
         drawWrapped(currentHeroFrame, hero.polygon);
 
@@ -689,27 +733,51 @@ public class bhr extends ApplicationAdapter {
 
         // Draw pause texture if paused
         if (paused) {
-            // Set color with alpha value for transparency (e.g., 0.5f for 50% transparency)
             batch.setColor(1, 1, 1, 0.5f);
-            // Draw pause texture to cover the entire screen
             float pauseX = camera.position.x - camera.viewportWidth / 2;
             float pauseY = camera.position.y - camera.viewportHeight / 2;
             batch.draw(pause, pauseX, pauseY, camera.viewportWidth, camera.viewportHeight);
-            // Reset color to white (fully opaque) for subsequent drawings
             batch.setColor(1, 1, 1, 1);
         }
-		drawTime(batch);
+		if (dead) {
+			batch.setColor(1, 1, 1, 0.8f);
+			float deadx = camera.position.x - camera.viewportWidth / 2;
+			float deadY = camera.position.y - camera.viewportHeight / 2;
+			batch.draw(death_screen, deadx, deadY, camera.viewportWidth, camera.viewportHeight);
+			batch.setColor(1, 1, 1, 1);
+
+			if (elapsedTime > longestTime) {
+				longestTime = elapsedTime;
+				saveLongestTime(longestTime);
+			}
+			elapsedTime = 0;
+
+			font.draw(batch, "Longest Time Survived: " + formatTime(longestTime),camera.position.x - camera.viewportWidth / 2 + 300, camera.position.y + camera.viewportHeight / 2 - 300);
+
+		}
+
         batch.end();
     }
 
+	public String formatTime(float time) {
+		int minutes = (int) (time / 60);
+		int seconds = (int) (time % 60);
+		return String.format("%02d:%02d", minutes, seconds);
+	}
+
+	boolean play = true;
 
 	public void GeneralUpdate(){
-		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
-			paused = true;
-			try{
-				Thread.sleep(100);
-			}catch (InterruptedException e){
-				e.printStackTrace();
+
+		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || dead){
+			if (!dead){
+				paused = true;
+			}else {
+				try{
+					Thread.sleep(100);
+				}catch (InterruptedException e){
+					e.printStackTrace();
+				}
 			}
 		}
 
@@ -725,7 +793,7 @@ public class bhr extends ApplicationAdapter {
 		// Check if a minute has passed to update bounds
 		if (TimeUtils.nanoTime() - lastBoundChangeTime > 60000000000L) { // 1 minute in nanoseconds
 			currentRandomBound += 1;
-			minutes += 1;
+			minute += 1;
 			lastBoundChangeTime = TimeUtils.nanoTime(); // Reset the last bound change time
 		}
 
@@ -787,7 +855,7 @@ public class bhr extends ApplicationAdapter {
 			Enemy_Bullet bullet = iter.next();
 			bullet.update(Gdx.graphics.getDeltaTime(),hero.polygon);
 			if (Intersector.overlaps(bullet.getBoundingCircle(), hero.polygon.getBoundingRectangle())) {
-				hero.takeDamage(10);
+				hero.takeDamage(enemy_atk-5);
 				iter.remove();
 			}
 			if (bullet.getTimeAlive() > Enemy_Bullet.LIFESPAN) {
@@ -800,7 +868,7 @@ public class bhr extends ApplicationAdapter {
 			bomb.update();
 			if (bomb.isExploded()) {
 				if (!bomb.hasHeroBeenDamaged() && Intersector.overlaps(bomb.getCircle(), hero.getPolygon().getBoundingRectangle())) {
-					hero.takeDamage(25);
+					hero.takeDamage(enemy_atk+10);
 					bomb.setHeroDamaged(true);
 				}
 
@@ -847,34 +915,13 @@ public class bhr extends ApplicationAdapter {
 				}
 			}
 		}
-		if (!hero.isAlive()) {
-			System.out.println("hero mati");
-			dispose();
-		}
-	}
-
-	private void updateTimer(float deltaTime) {
-		elapsedTime += deltaTime;
-		if (elapsedTime >= 1f) {
-			seconds++;
-			elapsedTime -= 1f;
-			if (seconds >= 60) {
-				seconds = 0;
-				minutes++;
-				if (minutes >= 60) {
-					minutes = 0;
-				}
+		if (hero.getHP() <= 0) {
+			dead = true;
+			if (play){
+				death_sound.play();
+				play = false;
 			}
 		}
-	}
-
-	private void drawTime(SpriteBatch batch) {
-		String timeString = String.format("%02d:%02d", minutes, seconds);
-		GlyphLayout layout = new GlyphLayout(TIME, timeString);
-		float textWidth = layout.width;
-		float x = camera.position.x + camera.viewportWidth / 2 - textWidth - 20;
-		float y = camera.position.y + camera.viewportHeight / 2 - 20;
-		TIME.draw(batch, timeString, x, y);
 	}
 
 
@@ -886,5 +933,6 @@ public class bhr extends ApplicationAdapter {
 		enemyS.dispose();
 		batch.dispose();
 		HP.dispose();
+		font.dispose();
 	}
 }
