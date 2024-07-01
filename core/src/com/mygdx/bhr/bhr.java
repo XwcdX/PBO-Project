@@ -36,7 +36,7 @@ public class bhr extends ApplicationAdapter {
 	//stats
 	private int spawntime = 1000000000;
 	private int hero_atk = 30;
-	private int enemy_atk = 15;
+	private int enemy_atk = 5;
 
 	private final int WORLD_WIDTH = 3000;
 	private final int WORLD_HEIGHT = 3000;
@@ -551,7 +551,7 @@ public class bhr extends ApplicationAdapter {
                 if (collisionTime >= 1f) {
 					if (!enemy.isDoneCollision()){
 						enemyS.play();
-						hero.takeDamage(5);
+						hero.takeDamage(enemy_atk);
 						enemy.setDoneCollision(true);
 					}
                 }
