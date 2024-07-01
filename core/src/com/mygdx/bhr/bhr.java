@@ -38,14 +38,15 @@ public class bhr extends ApplicationAdapter {
 	private int hero_atk = 30;
 	private int enemy_atk = 15;
 
-	private final int WORLD_WIDTH = 3200;
-	private final int WORLD_HEIGHT = 1920;
+	private final int WORLD_WIDTH = 3000;
+	private final int WORLD_HEIGHT = 3000;
 	// Adding gems
 	private Texture redImg1,redImg2,redImg3,redImg4;
 	private Texture blueImg1,blueImg2,blueImg3,blueImg4;
 	private Texture greenImg1,greenImg2,greenImg3,greenImg4;
 	private Texture pinkImg1,pinkImg2,pinkImg3,pinkImg4;
 	private Texture purpleImg1,purpleImg2,purpleImg3,purpleImg4;
+	private Texture mapImage;
 	private Texture[] generateFireballImg;
 	private Texture texture_pause;
 	private Sprite pause;
@@ -251,6 +252,9 @@ public class bhr extends ApplicationAdapter {
 
 	@Override
 	public void create() {
+
+		mapImage = new Texture(Gdx.files.internal("full_finished_map.png"));
+
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
 		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
 
@@ -435,6 +439,7 @@ public class bhr extends ApplicationAdapter {
         batch.setProjectionMatrix(camera.combined);
 
         batch.begin();
+		batch.draw(mapImage, -3000, -3000, 9000, 9000);
 
         // Draw hero and other entities
         drawWrapped(heroImage, hero.polygon);
@@ -543,8 +548,11 @@ public class bhr extends ApplicationAdapter {
                 collisionTimes.put(enemy, collisionTime);
 
                 if (collisionTime >= 1f) {
-                    enemyS.play();
-                    hero.takeDamage(enemy_atk); // biar enemy atk bisa tambah sakit makin late game
+					if (!enemy.isDoneCollision()){
+						enemyS.play();
+						hero.takeDamage(5);
+						enemy.setDoneCollision(true);
+					}
                 }
             }
 			if (enemy instanceof BossSpawner_Enemy){
@@ -553,8 +561,11 @@ public class bhr extends ApplicationAdapter {
 			}
         }
 
-		if (hero.getLevel() % 10 == 0){
-			enemy_atk+=10;
+		if (hero.getLevel() % 4 == 0 && hero.getLevel() > 4){
+			enemy_atk+=5;
+		}
+		if (hero.getLevel() % 2 == 0 && hero.getLevel() > 2){
+			hero_atk+=5;
 		}
 
 		// Handle bullet and enemy collision (Heroes)
@@ -563,7 +574,7 @@ public class bhr extends ApplicationAdapter {
 			for (Iterator<Enemies> iterEnemy = enemies.iterator(); iterEnemy.hasNext(); ) {
 				Enemies enemy = iterEnemy.next();
 				if (Intersector.overlaps(bullet.circle, enemy.polygon.getBoundingRectangle())) {
-					enemy.takeDamage(50);
+					enemy.takeDamage(hero_atk);
 					if (!enemy.isAlive()) {
 						spawnCrystals(enemy); // Function to handle crystal spawning
 						iterEnemy.remove();

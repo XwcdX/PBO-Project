@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.*;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.TimeUtils;
+
+import java.rmi.ConnectIOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -38,6 +40,14 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private final Texture minebombTexture;
     private final bhr game;
     private float animationTime;
+    private Modal modal;
+    private boolean level2bomb;
+    private boolean level2guardian;
+    private boolean level2kamehameha;
+    private boolean level3bomb;
+    private boolean level3guardian;
+    private boolean level3kamehameha;
+
     public Heroes(int worldWidth, int worldHeight, Camera camera, bhr game) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
@@ -75,6 +85,13 @@ public class Heroes implements hasHP, canShoot, hasExp {
         this.kamehamehaTexture.setPlayMode(Animation.PlayMode.LOOP);
         this.minebombTexture = new Texture(Gdx.files.internal("restart_button.png"));
         this.game = game;
+        this.modal = new Modal(camera);
+        this.level2bomb = false;
+        this.level2guardian = false;
+        this.level2kamehameha = false;
+        this.level3bomb = false;
+        this.level3guardian = false;
+        this.level3kamehameha = false;
     }
 
     public Polygon getPolygon() {
@@ -127,9 +144,10 @@ public class Heroes implements hasHP, canShoot, hasExp {
                 iter.remove();
             }
         }
+        checkAndAddSkills();
         animationTime += deltaTime;
         if (guardianSkill != null) {
-            guardianSkill.update(deltaTime, new Vector2(getX() + polygon.getBoundingRectangle().width / 2, getY() + polygon.getBoundingRectangle().height / 2),animationTime);
+            guardianSkill.update(deltaTime, new Vector2(getX() + polygon.getBoundingRectangle().width / 2, getY() + polygon.getBoundingRectangle().height / 2));
         }
 
         if (kamehamehaSkill != null) {
@@ -139,7 +157,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
         if (minebombSkill != null) {
             minebombSkill.update(deltaTime);
         }
-        checkAndAddSkills();
+        modal.update(deltaTime);
     }
 
     public float getX() {
@@ -213,7 +231,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private void levelUp() {
         level++;
         exp -= ExpNeeded;
-        ExpNeeded += 15;
+        ExpNeeded += 200;
         lvlUps.play();
     }
 
@@ -223,7 +241,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
 
     public void addGuardianSkill() {
         if (guardianSkill == null) {
-            guardianSkill = new Guardian_Skill(tinyCircleTexture, game);
+            guardianSkill = new Guardian_Skill(tinyCircleTexture, game, 3);
         }
     }
 
@@ -248,26 +266,70 @@ public class Heroes implements hasHP, canShoot, hasExp {
         }
         if (minebombSkill != null) {
             minebombSkill.draw(batch);
+            //minebombSkill.debugDraw();
         }
+        modal.draw(batch);
     }
 
     public void checkAndAddSkills() {
-        if (level == 5 && hasSkill(Skill.GUARDIAN)) {
-            addSkill(Skill.GUARDIAN);
-            addGuardianSkill();
-            System.out.println("Skill acquired: Guardian");
-        }
-        if (level == 10 && hasSkill(Skill.KAMEHAMEHA)) {
-            addSkill(Skill.KAMEHAMEHA);
-            addKamehamehaSkill();
-            System.out.println("Skill acquired: Kamehameha");
-        }
-        if (level == 1 && hasSkill(Skill.MINE_BOMB)) {
+        if (level == 2 && hasSkill(Skill.MINE_BOMB)) {
             addSkill(Skill.MINE_BOMB);
             addMineBombSkill();
-            System.out.println("Skill acquired: Mine Bomb");
+            modal.show("Skill Acquired : Mine Bomb", 2f);
         }
+        if (level == 3 && hasSkill(Skill.GUARDIAN)) {
+            addSkill(Skill.GUARDIAN);
+            addGuardianSkill();
+            modal.show("Skill Acquired : Guardian", 2f);
+        }
+        if (level == 4 && hasSkill(Skill.KAMEHAMEHA)) {
+            addSkill(Skill.KAMEHAMEHA);
+            addKamehamehaSkill();
+            modal.show("Skill Acquired : Flame Thrower", 2f);
+        }
+        if (level == 5 && !level2bomb) {
+            minebombSkill.setInitialRadius(50);
+            minebombSkill.setExplosionRadius(100);
+            modal.show("Skill Upgraded : Big Bomb", 2f);
+            level2bomb = true;
+        }
+        if (level == 6 && !level2guardian) {
+            guardianSkill.setNumberOfCircles(4);
+            modal.show("Skill Upgraded : Protector", 2f);
+            level2guardian = true;
+        }
+        if (level == 7 && !level2kamehameha) {
+            kamehamehaSkill.setWidth(300);
+            kamehamehaSkill.setHeight(30);
+            modal.show("Skill Upgraded : Flame Prince", 2f);
+            level2kamehameha = true;
+        }
+        if (level == 8 && !level3bomb) {
+            minebombSkill.setInitialRadius(60);
+            minebombSkill.setExplosionRadius(110);
+            minebombSkill.setCooldownDuration(5f);
+            minebombSkill.setExplosionDelay(3000000000L);
+            minebombSkill.setExplosionDamage(50);
+            modal.show("Skill Upgraded : The True Bomber", 2f);
+            level3bomb = true;
+        }
+        if (level == 9 && !level3guardian) {
+            guardianSkill.setNumberOfCircles(5);
+            guardianSkill.setSpeed(.2f);
+            modal.show("Skill Upgraded : Ancient Guard", 2f);
+            level3guardian = true;
+        }
+        if (level == 10 && !level3kamehameha) {
+            kamehamehaSkill.setHeight(50);
+            kamehamehaSkill.setWidth(350);
+            kamehamehaSkill.setACTIVE_DURATION(1.5f);
+            kamehamehaSkill.setCOOLDOWN_DURATION(5f);
+            modal.show("Skill Upgraded : Flame King", 2f);
+            level3kamehameha = true;
+        }
+
     }
+
 
     public void checkCollisionsWithGuardianSkill(Iterator<Enemies> enemiesIterator) {
         if (guardianSkill != null) {

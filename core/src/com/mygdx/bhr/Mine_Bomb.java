@@ -21,14 +21,34 @@ public class Mine_Bomb {
     private boolean active;
     private boolean exploded;
     private long activationTime;
-    private static final long EXPLOSION_DELAY = 1000000000L; // 1 second in nanoseconds
-    private static final float COOLDOWN_DURATION = 5.0f; // 5 seconds
+    private long EXPLOSION_DELAY = 4000000000L;
+    private float COOLDOWN_DURATION = 7.0f;
     private float cooldownTimer;
     private Random rand;
     private ShapeRenderer shapeRenderer;
-    private static final float INITIAL_RADIUS = 50;
-    private static final float EXPLOSION_RADIUS = 100;
-    private static final int EXPLOSION_DAMAGE = 250;
+    private float INITIAL_RADIUS = 30;
+    private float EXPLOSION_RADIUS = 60;
+    private int EXPLOSION_DAMAGE = 25;
+
+    public void setInitialRadius(float initialRadius) {
+        INITIAL_RADIUS = initialRadius;
+    }
+
+    public void setExplosionRadius(float explosionRadius) {
+        EXPLOSION_RADIUS = explosionRadius;
+    }
+
+    public void setExplosionDamage(int explosionDamage) {
+        EXPLOSION_DAMAGE = explosionDamage;
+    }
+
+    public void setExplosionDelay(long explosionDelay) {
+        EXPLOSION_DELAY = explosionDelay;
+    }
+
+    public void setCooldownDuration(float cooldownDuration) {
+        COOLDOWN_DURATION = cooldownDuration;
+    }
 
     public Mine_Bomb(Texture texture, bhr game) {
         this.texture = texture;
