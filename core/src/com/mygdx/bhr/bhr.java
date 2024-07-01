@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.TimeUtils;
 
+
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
 	private BitmapFont EXP;
@@ -35,7 +36,7 @@ public class bhr extends ApplicationAdapter {
 
 	//stats
 	private int spawntime = 1000000000;
-	private int hero_atk = 30;
+	private int hero_atk = 1000;
 	private int enemy_atk = 15;
 
 	private final int WORLD_WIDTH = 3000;
@@ -67,7 +68,10 @@ public class bhr extends ApplicationAdapter {
 	public static Array<Enemy_Bomb> enemyBombs = new Array<>();
 	private long lastBoundChangeTime = TimeUtils.nanoTime();
 	private int currentRandomBound = 1;
-	private int minute = 0;
+	private BitmapFont TIME;
+	private float elapsedTime = 0f;
+	private int minutes = 0;
+	private int seconds = 0;
 	Array<Enemies> summonedEnemies = new Array<>();
 	private float stateTime = 0;
 	private void spawnEnemies() {
@@ -75,7 +79,7 @@ public class bhr extends ApplicationAdapter {
 		Polygon bossPolygon;
 		boolean isOverlapping;
 		int safetyCounter = 0;
-		final int MAX_TRIES = 100;
+		final int MAX_TRIES = 1000;
 
 		// Create a new enemy polygon, ensuring it does not overlap with existing enemies
 		do {
@@ -108,16 +112,16 @@ public class bhr extends ApplicationAdapter {
 			}
 		}
 
-		if (minute < 3) {
+		if (minutes < 3) {
 			enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
-		} else if (minute < 4) {
+		} else if (minutes < 4) {
 			// 25% chance for Long_Enemy, 75% chance for regular Enemies
 			if (randomValue == 3) {
 				enemies.add(new Long_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			} else {
 				enemies.add(new Enemies(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
 			}
-		} else if (minute < 6) {
+		} else if (minutes < 6) {
 			// 16.6% chance for Bomber_Enemy, 33.3% chance for Long_Enemy, 50% chance for regular Enemies
 			if (randomValue == 5) {
 				enemies.add(new Bomber_Enemy(enemyPolygon, WORLD_WIDTH, WORLD_HEIGHT));
@@ -401,19 +405,25 @@ public class bhr extends ApplicationAdapter {
 		HP = new BitmapFont();
 		EXP = new BitmapFont();
 		LVL = new BitmapFont();
+		TIME = new BitmapFont();
 		LVL.getData().setScale(1);
 		LVL.setColor(1,1,1,1);
 		EXP.getData().setScale(1);
 		EXP.setColor(1, 1, 1, 1);
 		HP.getData().setScale(1);
 		HP.setColor(1, 1, 1, 1);
-
+		TIME.getData().setScale(1.5f);
+		TIME.setColor(1, 1, 1, 1);
+		//startLibGDXTimer();
 		collisionTimes = new HashMap<>();
 	}
 
 	boolean paused;
 	@Override
 	public void render() {
+		float deltaTime2 = Gdx.graphics.getDeltaTime();
+		updateTimer(deltaTime2);
+
 		stateTime += Gdx.graphics.getDeltaTime();
         ScreenUtils.clear(0, 0, 0.2f, 1);
 
@@ -440,7 +450,6 @@ public class bhr extends ApplicationAdapter {
 
         batch.begin();
 		batch.draw(mapImage, -3000, -3000, 9000, 9000);
-
         // Draw hero and other entities
         drawWrapped(heroImage, hero.polygon);
 
@@ -505,13 +514,12 @@ public class bhr extends ApplicationAdapter {
             // Reset color to white (fully opaque) for subsequent drawings
             batch.setColor(1, 1, 1, 1);
         }
-
+		drawTime(batch);
         batch.end();
     }
 
 
 	public void GeneralUpdate(){
-
 		if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
 			paused = true;
 			try{
@@ -533,7 +541,7 @@ public class bhr extends ApplicationAdapter {
 		// Check if a minute has passed to update bounds
 		if (TimeUtils.nanoTime() - lastBoundChangeTime > 60000000000L) { // 1 minute in nanoseconds
 			currentRandomBound += 1;
-			minute += 1;
+			minutes += 1;
 			lastBoundChangeTime = TimeUtils.nanoTime(); // Reset the last bound change time
 		}
 
@@ -652,6 +660,30 @@ public class bhr extends ApplicationAdapter {
 		if (!hero.isAlive()) {
 			dispose();
 		}
+	}
+
+	private void updateTimer(float deltaTime) {
+		elapsedTime += deltaTime;
+		if (elapsedTime >= 1f) {
+			seconds++;
+			elapsedTime -= 1f;
+			if (seconds >= 60) {
+				seconds = 0;
+				minutes++;
+				if (minutes >= 60) {
+					minutes = 0;
+				}
+			}
+		}
+	}
+
+	private void drawTime(SpriteBatch batch) {
+		String timeString = String.format("%02d:%02d", minutes, seconds);
+		GlyphLayout layout = new GlyphLayout(TIME, timeString);
+		float textWidth = layout.width;
+		float x = camera.position.x + camera.viewportWidth / 2 - textWidth - 20;
+		float y = camera.position.y + camera.viewportHeight / 2 - 20;
+		TIME.draw(batch, timeString, x, y);
 	}
 
 

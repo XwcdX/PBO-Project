@@ -42,7 +42,7 @@ public class Guardian_Skill {
         this.center = new Vector2();
         this.bigCircleRadius = 80;
         this.tinyCircleRadius = 20;
-        this.speed = .1f; // Rotation speed
+        this.speed = .3f; // Rotation speed
         this.angleOffset = 0; // Initial angle
         this.numberOfCircles = initialNumberOfCircles;
         this.tinyCircleAngles = new float[initialNumberOfCircles];
