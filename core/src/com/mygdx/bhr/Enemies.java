@@ -113,6 +113,7 @@ public class Enemies implements hasHP {
     private void checkCollision(){
         if (lastCollision >= 1f){
             doneCollision = false;
+            lastCollision=0;
         }
     }
 
