@@ -288,7 +288,7 @@ public class bhr extends ApplicationAdapter {
 		texture_pause = new Texture(Gdx.files.internal("Pause screen.jpg"));
 		pause = new Sprite(texture_pause);
 
-		texture_death_screen = new Texture(Gdx.files.internal("game_over.jpg"));
+		texture_death_screen = new Texture(Gdx.files.internal("death_screen_new.png"));
 		death_screen = new Sprite(texture_death_screen);
 
 		enemyS = Gdx.audio.newSound(Gdx.files.internal("attack.wav"));
