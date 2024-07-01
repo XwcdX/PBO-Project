@@ -194,7 +194,7 @@ public class bhr extends ApplicationAdapter {
 		float width = texture.getRegionWidth();
 		float height = texture.getRegionHeight();
 
-		batch.draw(texture, vertices[0], vertices[1]);
+		batch.draw(texture, vertices[0], vertices[1],width,height);
 		if (vertices[0] < camera.position.x - camera.viewportWidth / 2) {
 			batch.draw(texture, vertices[0] + WORLD_WIDTH, vertices[1]);
 		}
@@ -304,16 +304,17 @@ public class bhr extends ApplicationAdapter {
 		Texture[] generateEnemyWizard = new Texture[8];
 		TextureRegion[] texture_region_enemy_wizard = new TextureRegion[8];
 		for(int i = 0;i<8;i++){
-			String filename = String.format("Run_Enemy_Wizzard/tile%03d.png",i);
+			String filename = String.format("resized2/tile%03d.png",i);
 			generateEnemyWizard[i] = new Texture(Gdx.files.internal(filename));
 			texture_region_enemy_wizard[i] = new TextureRegion(generateEnemyWizard[i]);
 		}
 		wizzardAnimation = new Animation<>(0.20f,texture_region_enemy_wizard);
 		wizzardAnimation.setPlayMode(Animation.PlayMode.LOOP);
-		Texture[] generateEnemyBomber = new Texture[9];
-		TextureRegion[] texture_region_enemy_bomber = new TextureRegion[9];
-		for(int i =0;i<9;i++){
-			String filename = String.format("Bomber Run/tile%03d.png",i);
+
+		Texture[] generateEnemyBomber = new Texture[8];
+		TextureRegion[] texture_region_enemy_bomber = new TextureRegion[8];
+		for(int i =0;i<8;i++){
+			String filename = String.format("bomber_resize_64/tile%03d.png",i);
 			generateEnemyBomber[i] = new Texture(Gdx.files.internal(filename));
 			texture_region_enemy_bomber[i] = new TextureRegion(generateEnemyBomber[i]);
 		}
@@ -448,7 +449,7 @@ public class bhr extends ApplicationAdapter {
 			if (enemy instanceof Long_Enemy){
 				drawWrapped(wizzardAnimation, enemy.polygon, stateTime);
 			} else if (enemy instanceof Bomber_Enemy) {
-				drawWrapped(bossAnimation, enemy.polygon, stateTime);
+				drawWrapped(bomberAnimation, enemy.polygon, stateTime);
 			} else if(enemy instanceof BossSpawner_Enemy){
 				drawWrapped(bossAnimation, enemy.polygon, stateTime);
 			} else {
