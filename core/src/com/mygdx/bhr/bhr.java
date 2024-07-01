@@ -2,13 +2,16 @@ package com.mygdx.bhr;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Time;
 import java.util.*;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.*;
@@ -28,6 +31,7 @@ import javax.sound.sampled.*;
 
 public class bhr extends ApplicationAdapter {
 	private BitmapFont HP;
+	private BitmapFont Time_Survived;
 	private BitmapFont EXP;
 	private BitmapFont LVL;
 	private Texture enemyImage;
@@ -86,6 +90,13 @@ public class bhr extends ApplicationAdapter {
 	private int minute = 0;
 	Array<Enemies> summonedEnemies = new Array<>();
 	private float stateTime = 0;
+
+	// time tracking
+	BitmapFont font;
+	Preferences prefs;
+	float elapsedTime;
+	float longestTime;
+
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
 		Polygon bossPolygon;
@@ -269,6 +280,11 @@ public class bhr extends ApplicationAdapter {
 	@Override
 	public void create() {
 
+		font = new BitmapFont();
+		prefs = Gdx.app.getPreferences("MyPreferences");
+		elapsedTime = 0;
+		longestTime = prefs.getFloat("longestTime", 0);
+
 		death_sound = Gdx.audio.newSound(Gdx.files.internal("audio/death_sound.mp3"));
 
 		mapImage = new Texture(Gdx.files.internal("full_finished_map.png"));
@@ -423,19 +439,40 @@ public class bhr extends ApplicationAdapter {
 		HP = new BitmapFont();
 		EXP = new BitmapFont();
 		LVL = new BitmapFont();
+		Time_Survived = new BitmapFont();
 		LVL.getData().setScale(1);
 		LVL.setColor(1,1,1,1);
 		EXP.getData().setScale(1);
 		EXP.setColor(1, 1, 1, 1);
 		HP.getData().setScale(1);
 		HP.setColor(1, 1, 1, 1);
+		Time_Survived.getData().setScale(1);
+		Time_Survived.setColor(1, 1, 1, 1);
+
 
 		collisionTimes = new HashMap<>();
+	}
+
+
+	public void saveLongestTime(float time) {
+		prefs.putFloat("longestTime", time);
+		prefs.flush();
+	}
+
+	public float loadLongestTime() {
+		return prefs.getFloat("longestTime", 0);
 	}
 
 	boolean paused;
 	@Override
 	public void render() {
+
+		float deltaTime_HS = Gdx.graphics.getDeltaTime();
+		elapsedTime += deltaTime_HS;
+		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+
+
 		stateTime += Gdx.graphics.getDeltaTime();
         ScreenUtils.clear(0, 0, 0.2f, 1);
 
@@ -467,6 +504,8 @@ public class bhr extends ApplicationAdapter {
 
         batch.begin();
 		batch.draw(mapImage, -3000, -3000, 9000, 9000);
+
+		font.draw(batch, "Elapsed Time: " + formatTime(elapsedTime),camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 70);
 
         // Draw hero and other entities
         drawWrapped(heroImage, hero.polygon);
@@ -535,10 +574,25 @@ public class bhr extends ApplicationAdapter {
 			float deadY = camera.position.y - camera.viewportHeight / 2;
 			batch.draw(death_screen, deadx, deadY, camera.viewportWidth, camera.viewportHeight);
 			batch.setColor(1, 1, 1, 1);
+
+			if (elapsedTime > longestTime) {
+				longestTime = elapsedTime;
+				saveLongestTime(longestTime);
+			}
+			elapsedTime = 0;
+
+			font.draw(batch, "Longest Time Survived: " + formatTime(longestTime),camera.position.x - camera.viewportWidth / 2 + 300, camera.position.y + camera.viewportHeight / 2 - 300);
+
 		}
 
         batch.end();
     }
+
+	public String formatTime(float time) {
+		int minutes = (int) (time / 60);
+		int seconds = (int) (time % 60);
+		return String.format("%02d:%02d", minutes, seconds);
+	}
 
 	boolean play = true;
 
@@ -702,5 +756,6 @@ public class bhr extends ApplicationAdapter {
 		enemyS.dispose();
 		batch.dispose();
 		HP.dispose();
+		font.dispose();
 	}
 }
