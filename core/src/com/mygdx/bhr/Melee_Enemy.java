@@ -16,8 +16,9 @@ public class Melee_Enemy extends Enemies {
     public Melee_Enemy(Polygon polygon, int worldWidth, int worldHeight) {
         super(polygon, worldWidth, worldHeight);
         this.attackRange = new Rectangle();
+        this.hp = 150;
         this.lastAttackTime = 0;
-        super.ATTACK_DAMAGE = 10;
+        super.ATTACK_DAMAGE = 25;
     }
 
     @Override

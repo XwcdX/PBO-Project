@@ -10,6 +10,8 @@ public class Long_Enemy extends Enemies {
 
     public Long_Enemy(Polygon polygon, int worldWidth, int worldHeight) {
         super(polygon, worldWidth, worldHeight);
+        this.hp = 70;
+        super.ATTACK_DAMAGE = 30;
     }
 
     @Override

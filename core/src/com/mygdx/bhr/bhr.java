@@ -44,13 +44,14 @@ public class bhr extends ApplicationAdapter {
 	private long lastSpawnTime;
 
 	private Sound death_sound;
+	public Sound fireball_hit;
 	private static boolean soundPlayed = false;
 	private boolean dead = false;
 
 	//stats
 	private int spawntime = 1000000000;
-	private int hero_atk = 30;
-	private int enemy_atk = 15;
+	private int hero_atk = 150;
+	private int enemy_atk = 1;
 
 	private final int WORLD_WIDTH = 3000;
 	private final int WORLD_HEIGHT = 3000;
@@ -360,6 +361,8 @@ public class bhr extends ApplicationAdapter {
 		longestTime = prefs.getFloat("longestTime", 0);
 
 		death_sound = Gdx.audio.newSound(Gdx.files.internal("audio/death_sound.mp3"));
+
+		fireball_hit = Gdx.audio.newSound(Gdx.files.internal("fireball_hit.mp3"));
 
 		mapImage = new Texture(Gdx.files.internal("full_finished_map.png"));
 
@@ -819,11 +822,9 @@ public class bhr extends ApplicationAdapter {
 			}
         }
 
-		if (hero.getLevel() % 4 == 0 && hero.getLevel() > 4){
-			enemy_atk+=5;
-		}
 		if (hero.getLevel() % 2 == 0 && hero.getLevel() > 2){
 			hero_atk+=5;
+			hero.setHp(hero.getHP()+25);
 		}
 
 		// Handle bullet and enemy collision (Heroes)
@@ -833,6 +834,7 @@ public class bhr extends ApplicationAdapter {
 				Enemies enemy = iterEnemy.next();
 				if (Intersector.overlaps(bullet.circle, enemy.polygon.getBoundingRectangle())) {
 					enemy.takeDamage(hero_atk);
+					fireball_hit.play();
 					if (!enemy.isAlive()) {
 						spawnCrystals(enemy); // Function to handle crystal spawning
 						iterEnemy.remove();
@@ -847,7 +849,7 @@ public class bhr extends ApplicationAdapter {
 			Enemy_Bullet bullet = iter.next();
 			bullet.update(Gdx.graphics.getDeltaTime(),hero.polygon);
 			if (Intersector.overlaps(bullet.getBoundingCircle(), hero.polygon.getBoundingRectangle())) {
-				hero.takeDamage(enemy_atk-5);
+				hero.takeDamage(enemy_atk);
 				iter.remove();
 			}
 			if (bullet.getTimeAlive() > Enemy_Bullet.LIFESPAN) {
@@ -860,7 +862,7 @@ public class bhr extends ApplicationAdapter {
 			bomb.update();
 			if (bomb.isExploded()) {
 				if (!bomb.hasHeroBeenDamaged() && Intersector.overlaps(bomb.getCircle(), hero.getPolygon().getBoundingRectangle())) {
-					hero.takeDamage(enemy_atk+10);
+					hero.takeDamage(enemy_atk);
 					bomb.setHeroDamaged(true);
 				}
 
