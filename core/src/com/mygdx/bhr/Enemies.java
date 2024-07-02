@@ -14,6 +14,7 @@ public class Enemies implements hasHP {
     protected float stateTime;
     protected boolean doneCollision;
     protected float lastCollision;
+    private boolean isMovingLeft; // Flag to track if enemy is moving left
 
     public Enemies(Polygon polygon, int worldWidth, int worldHeight) {
         this.polygon = polygon;
@@ -23,6 +24,7 @@ public class Enemies implements hasHP {
         this.hp = 100;
         this.stateTime = 30f;
         this.doneCollision = false;
+        this.isMovingLeft = false; // Initialize as not moving left
     }
 
     public boolean isDoneCollision() {
@@ -39,25 +41,41 @@ public class Enemies implements hasHP {
 
         velocity.set(direction.scl(100));
 
+        // Check direction to determine flipping
+        if (velocity.x < 0 && !isMovingLeft) {
+            // Moving left but not currently facing left, flip
+            polygon.setScale(-1, 1);
+            isMovingLeft = true;
+        } else if (velocity.x > 0 && isMovingLeft) {
+            // Moving right but currently facing left, flip back
+            polygon.setScale(1, 1);
+            isMovingLeft = false;
+        }
+
         polygon.translate(velocity.x * deltaTime, velocity.y * deltaTime);
 
         wrapAroundWorld();
 
         stateTime += deltaTime;
 
-        if (doneCollision){
+        if (doneCollision) {
             lastCollision += deltaTime;
             checkCollision();
         }
     }
+    boolean kanan = true;
 
-    protected Vector2 shortestDirection(Polygon from, Polygon to) {
-        Vector2 fromCenter = new Vector2(from.getBoundingRectangle().x + from.getBoundingRectangle().width / 2, from.getBoundingRectangle().y + from.getBoundingRectangle().height / 2);
-        Vector2 toCenter = new Vector2(to.getBoundingRectangle().x + to.getBoundingRectangle().width / 2, to.getBoundingRectangle().y + to.getBoundingRectangle().height / 2);
+    public Vector2 shortestDirection(Polygon from, Polygon to) {
+        Vector2 fromCenter = new Vector2();
+        Vector2 toCenter = new Vector2();
 
-        Vector2 direction = new Vector2();
-        direction.x = toCenter.x - fromCenter.x;
-        direction.y = toCenter.y - fromCenter.y;
+        from.getBoundingRectangle().getCenter(fromCenter);
+        to.getBoundingRectangle().getCenter(toCenter);
+
+        if (toCenter.x - fromCenter.y < 0){
+            kanan = false;
+        }else {kanan = true;}
+        Vector2 direction = new Vector2(toCenter.x - fromCenter.x, toCenter.y - fromCenter.y);
 
         if (Math.abs(direction.x) > (float) WORLD_WIDTH / 2) {
             if (direction.x > 0) {
@@ -77,6 +95,14 @@ public class Enemies implements hasHP {
 
         return direction;
     }
+
+    public boolean shouldFlipHorizontal(Polygon enemyPolygon, Polygon playerPolygon) {
+        Vector2 direction = shortestDirection(enemyPolygon, playerPolygon);
+        return direction.x < 0; // Flip if enemy is to the left of the player
+    }
+
+
+
 
     protected void wrapAroundWorld() {
         float[] vertices = polygon.getTransformedVertices();
@@ -112,10 +138,10 @@ public class Enemies implements hasHP {
         stateTime = 0f;
     }
 
-    protected void checkCollision(){
-        if (lastCollision >= 1f){
+    protected void checkCollision() {
+        if (lastCollision >= 1f) {
             doneCollision = false;
-            lastCollision=0;
+            lastCollision = 0;
         }
     }
 }

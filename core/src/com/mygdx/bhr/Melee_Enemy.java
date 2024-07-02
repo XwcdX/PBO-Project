@@ -6,7 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class Melee_Enemy extends Enemies {
-    private static final float ATTACK_DISTANCE = 70f;
+    private static final float ATTACK_DISTANCE = 45f;
     private static final float ATTACK_COOLDOWN = 3f;
     private Rectangle attackRange;
     private float lastAttackTime;
@@ -20,6 +20,7 @@ public class Melee_Enemy extends Enemies {
         super.ATTACK_DAMAGE = 10;
     }
 
+    boolean attack = true;
     @Override
     public void update(float deltaTime, Polygon heroPolygon) {
         Vector2 direction = shortestDirection(polygon, heroPolygon);
@@ -36,8 +37,12 @@ public class Melee_Enemy extends Enemies {
             wrapAroundWorld();
         } else {
             velocity.set(0, 0);
-            if (checkAttackRange(heroPolygon) && stateTime - lastAttackTime >= ATTACK_COOLDOWN) {
+            if (stateTime-lastAttackTime >= 2.5f){
+                attack = true;
+            }
+            if (checkAttackRange(heroPolygon) && stateTime - lastAttackTime >= ATTACK_COOLDOWN && attack) {
                 attackHero();
+                attack = false;
                 lastAttackTime = stateTime;
             }
         }
@@ -72,9 +77,5 @@ public class Melee_Enemy extends Enemies {
 
     private void attackHero() {
         attack = true;
-    }
-
-    public void render(ShapeRenderer shapeRenderer) {
-        shapeRenderer.rect(attackRange.x, attackRange.y, attackRange.width, attackRange.height);
     }
 }

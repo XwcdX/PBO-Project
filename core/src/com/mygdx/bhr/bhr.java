@@ -26,6 +26,8 @@ import javax.sound.sampled.*;
 
 public class bhr extends ApplicationAdapter {
 	private TextureAtlas heroAnimation;
+	private TextureAtlas meleeAttackAtlas;
+
 	private BitmapFont HP;
 	private BitmapFont Time_Survived;
 	private BitmapFont EXP;
@@ -88,12 +90,14 @@ public class bhr extends ApplicationAdapter {
 	private float stateTime = 0;
 	private String dir = ":)";
 	private Animation<TextureRegion> rightIdle, rightShoot, rightWalk, rightUpIdle, rightUpShoot, rightUpWalk, rightDownIdle, rightDownShoot, rightDownWalk,upIdle, upShoot, upWalk, leftIdle, leftShoot, leftWalk, leftUpIdle, leftUpShoot, leftUpWalk, leftDownIdle, leftDownShoot, leftDownWalk, downIdle, downShoot, downWalk;
+	private Animation<TextureRegion> at;
 
 	// time tracking
 	BitmapFont font;
 	Preferences prefs;
 	float elapsedTime;
 	float longestTime;
+	Animation<TextureRegion> attackAnimation;
 
 	private void spawnEnemies() {
 		Polygon enemyPolygon;
@@ -312,6 +316,18 @@ public class bhr extends ApplicationAdapter {
 		}
 		return new Animation<>(frameDuration, frames);
 	}
+	private Animation<TextureRegion> createMeleeAtck(String name, float frameDuration) {
+		Array<TextureRegion> frames = new Array<>();
+		for (int i = 1; i <= 20; i++) { // Assuming 6 frames per animation
+			TextureRegion region = meleeAttackAtlas.findRegion(name, i);
+			if (region != null) {
+				frames.add(region);
+			} else {
+				System.out.println("Region not found: " + name + " " + i);
+			}
+		}
+		return new Animation<>(frameDuration, frames);
+	}
 
 	public Animation<TextureRegion> updateShootingAnimation() {
 		if (hero.shoot) {
@@ -348,8 +364,8 @@ public class bhr extends ApplicationAdapter {
 				return rightShoot;
 			}
 		}
-        return null;
-    }
+		return null;
+	}
 
 	@Override
 	public void create() {
@@ -388,6 +404,11 @@ public class bhr extends ApplicationAdapter {
 		leftDownIdle = createHeroAnimation("down_left_idle", 0.2f);
 		leftDownShoot = createHeroAnimation("down_left_shoot", .5f);
 		leftDownWalk = createHeroAnimation("down_left_walk", 0.2f);
+
+		// melee Atlas
+		meleeAttackAtlas = new TextureAtlas(Gdx.files.internal("PBOMeleeAnimation/mel_at.atlas"));
+//		Array<TextureAtlas.AtlasRegion> attackRegions = meleeAttackAtlas.findRegions("at");
+		at = createMeleeAtck("at",0.1f);
 
 		enemyImage = new Texture(Gdx.files.internal("enemyTest1.png"));
 		enemyImage.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
@@ -568,30 +589,31 @@ public class bhr extends ApplicationAdapter {
 	public void render() {
 		stateTime += Gdx.graphics.getDeltaTime();
 		Animation<TextureRegion> currentAnimation = rightIdle;
-        switch (dir) {
-            case "up":
-                currentAnimation = upIdle;
-                break;
-            case "down":
-                currentAnimation = downIdle;
-                break;
-            case "left":
-                currentAnimation = leftIdle;
-                break;
-            case "ru":
-                currentAnimation = rightUpIdle;
-                break;
-            case "rd":
-                currentAnimation = rightDownIdle;
-                break;
-            case "lu":
-                currentAnimation = leftUpIdle;
-                break;
-            case "ld":
-                currentAnimation = leftDownIdle;
-                break;
+		Animation<TextureRegion> currentMeAtck = at; //melee attack
+		switch (dir) {
+			case "up":
+				currentAnimation = upIdle;
+				break;
+			case "down":
+				currentAnimation = downIdle;
+				break;
+			case "left":
+				currentAnimation = leftIdle;
+				break;
+			case "ru":
+				currentAnimation = rightUpIdle;
+				break;
+			case "rd":
+				currentAnimation = rightDownIdle;
+				break;
+			case "lu":
+				currentAnimation = leftUpIdle;
+				break;
+			case "ld":
+				currentAnimation = leftDownIdle;
+				break;
 			default:
-        }
+		}
 
 		List<Integer> activeKeys = new ArrayList<>();
 
@@ -639,50 +661,73 @@ public class bhr extends ApplicationAdapter {
 
 		ScreenUtils.clear(0, 0, 0.2f, 1);
 
-        if (paused || dead) {
-            if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isTouched()) {
-                paused = false;
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
+		if (paused || dead) {
+			if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isTouched()) {
+				paused = false;
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 			if (dead){
 				if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)){
 					dispose();
 				}
 			}
-        } else {
-            GeneralUpdate();
-            hero.update(Gdx.graphics.getDeltaTime());
-        }
+		} else {
+			GeneralUpdate();
+			hero.update(Gdx.graphics.getDeltaTime());
+		}
 		TextureRegion currentHeroFrame = currentAnimation.getKeyFrame(stateTime,true);
-        // Update camera position
-        camera.position.set(hero.getX() + 32, hero.getY() + 32, 0);
-        camera.update();
+		TextureRegion currentmeleeAtckFrame = currentMeAtck.getKeyFrame(stateTime,true);
+		// Update camera position
+		camera.position.set(hero.getX() + 32, hero.getY() + 32, 0);
+		camera.update();
 
-        // Ensure batch uses the camera's projection matrix
-        batch.setProjectionMatrix(camera.combined);
+		// Ensure batch uses the camera's projection matrix
+		batch.setProjectionMatrix(camera.combined);
 
-        batch.begin();
+		batch.begin();
 		batch.draw(mapImage, -3000, -3000, 9000, 9000);
 
 		font.draw(batch, "Elapsed Time: " + formatTime(elapsedTime),camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 70);
 
-        // Draw hero and other entities
-        drawWrapped(currentHeroFrame, hero.polygon);
+		// Draw hero and other entities
+		drawWrapped(currentHeroFrame, hero.polygon);
+
 
 		for (Enemies enemy : enemies) {
-			if (enemy instanceof Long_Enemy){
-				drawWrapped(wizzardAnimation, enemy.polygon, stateTime);
+			Animation<TextureRegion> animationToDraw;
+
+			if (enemy instanceof Long_Enemy) {
+				animationToDraw = wizzardAnimation;
 			} else if (enemy instanceof Bomber_Enemy) {
-				drawWrapped(bomberAnimation, enemy.polygon, stateTime);
-			} else if(enemy instanceof BossSpawner_Enemy){
-				drawWrapped(bossAnimation, enemy.polygon, stateTime);
+				animationToDraw = bomberAnimation;
+			} else if (enemy instanceof BossSpawner_Enemy) {
+				animationToDraw = bossAnimation;
 			} else {
-				drawWrapped(undeadAnimation, enemy.polygon, stateTime);
+				animationToDraw = undeadAnimation;
+				if (enemy.attack){
+					currentMeAtck = at;
+				}
 			}
+
+			// Determine which animation to use based on enemy direction
+			if (!enemy.kanan){
+				if (enemy.attack){
+					currentMeAtck = flipAnimationHorizontally(currentMeAtck);
+					drawWrapped(currentMeAtck, enemy.polygon, stateTime);
+				}
+				animationToDraw = flipAnimationHorizontally(animationToDraw);
+				drawWrapped(animationToDraw,enemy.polygon,stateTime);
+			}else { //hadap kanan
+				if (enemy.attack){
+					drawWrapped(currentMeAtck, enemy.polygon, stateTime);
+				}
+				drawWrapped(animationToDraw,enemy.polygon,stateTime);
+			}
+
 		}
 
 		for (Enemy_Bullet bullet : enemyBullets) {
@@ -694,43 +739,43 @@ public class bhr extends ApplicationAdapter {
 		}
 
 		float deltaTime = Gdx.graphics.getDeltaTime();
-        for (Bullet bullet : hero.getBullets()) {
+		for (Bullet bullet : hero.getBullets()) {
 			bullet.updates(deltaTime);
-            float rotation = bullet.getRotation() - 180;
+			float rotation = bullet.getRotation() - 180;
 			TextureRegion currentFrame = firebalAnimation.getKeyFrame(bullet.getStateTime(), true);
-            batch.draw(currentFrame.getTexture(),
-                    bullet.circle.x - bullet.circle.radius, bullet.circle.y - bullet.circle.radius,
-                    bullet.circle.radius, bullet.circle.radius,
-                    currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),
-                    0.09f, 0.09f,
-                    rotation,
-                    0, 0,
-                    currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),
-                    false, false);
-        }
+			batch.draw(currentFrame.getTexture(),
+					bullet.circle.x - bullet.circle.radius, bullet.circle.y - bullet.circle.radius,
+					bullet.circle.radius, bullet.circle.radius,
+					currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),
+					0.09f, 0.09f,
+					rotation,
+					0, 0,
+					currentFrame.getRegionWidth(), currentFrame.getRegionHeight(),
+					false, false);
+		}
 
-        for (Crystal crystal : crystals) {
-            crystal.updateStateTime(Gdx.graphics.getDeltaTime());
-            if (!crystal.collected) {
-                Texture texture = crystal.getTexture();
-                drawWrapped(texture, crystal.polygon);
-            }
-        }
+		for (Crystal crystal : crystals) {
+			crystal.updateStateTime(Gdx.graphics.getDeltaTime());
+			if (!crystal.collected) {
+				Texture texture = crystal.getTexture();
+				drawWrapped(texture, crystal.polygon);
+			}
+		}
 
-        hero.drawSkills(batch);
+		hero.drawSkills(batch);
 
-        HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
-        EXP.draw(batch, "EXP: " + hero.getExp(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 30);
-        LVL.draw(batch, "LVL: " + hero.getLevel(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
+		HP.draw(batch, "HP: " + hero.getHP(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 10);
+		EXP.draw(batch, "EXP: " + hero.getExp(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 30);
+		LVL.draw(batch, "LVL: " + hero.getLevel(), camera.position.x - camera.viewportWidth / 2 + 10, camera.position.y + camera.viewportHeight / 2 - 50);
 
-        // Draw pause texture if paused
-        if (paused) {
-            batch.setColor(1, 1, 1, 0.5f);
-            float pauseX = camera.position.x - camera.viewportWidth / 2;
-            float pauseY = camera.position.y - camera.viewportHeight / 2;
-            batch.draw(pause, pauseX, pauseY, camera.viewportWidth, camera.viewportHeight);
-            batch.setColor(1, 1, 1, 1);
-        }
+		// Draw pause texture if paused
+		if (paused) {
+			batch.setColor(1, 1, 1, 0.5f);
+			float pauseX = camera.position.x - camera.viewportWidth / 2;
+			float pauseY = camera.position.y - camera.viewportHeight / 2;
+			batch.draw(pause, pauseX, pauseY, camera.viewportWidth, camera.viewportHeight);
+			batch.setColor(1, 1, 1, 1);
+		}
 		if (dead) {
 			batch.setColor(1, 1, 1, 0.8f);
 			float deadx = camera.position.x - camera.viewportWidth / 2;
@@ -748,8 +793,8 @@ public class bhr extends ApplicationAdapter {
 
 		}
 
-        batch.end();
-    }
+		batch.end();
+	}
 
 	public String formatTime(float time) {
 		int minutes = (int) (time / 60);
@@ -790,23 +835,23 @@ public class bhr extends ApplicationAdapter {
 		}
 
 		// Handle enemy and hero collision
-        for (Enemies enemy : enemies) {
-            enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
-            if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
-                if (!collisionTimes.containsKey(enemy)) {
-                    collisionTimes.put(enemy, 0f);
-                }
-                float collisionTime = collisionTimes.get(enemy) + Gdx.graphics.getDeltaTime();
-                collisionTimes.put(enemy, collisionTime);
+		for (Enemies enemy : enemies) {
+			enemy.update(Gdx.graphics.getDeltaTime(), hero.polygon);
+			if (Intersector.overlapConvexPolygons(enemy.polygon, hero.polygon)) {
+				if (!collisionTimes.containsKey(enemy)) {
+					collisionTimes.put(enemy, 0f);
+				}
+				float collisionTime = collisionTimes.get(enemy) + Gdx.graphics.getDeltaTime();
+				collisionTimes.put(enemy, collisionTime);
 
-                if (collisionTime >= 1f) {
+				if (collisionTime >= 1f) {
 					if (!enemy.isDoneCollision()){
 						enemyS.play();
 						hero.takeDamage(enemy_atk);
 						enemy.setDoneCollision(true);
 					}
-                }
-            }
+				}
+			}
 			if (enemy instanceof BossSpawner_Enemy){
 				enemies.addAll(summonedEnemies);
 				summonedEnemies.clear();
@@ -817,7 +862,7 @@ public class bhr extends ApplicationAdapter {
 					enemy.attack = false;
 				}
 			}
-        }
+		}
 
 		if (hero.getLevel() % 4 == 0 && hero.getLevel() > 4){
 			enemy_atk+=5;
@@ -927,4 +972,14 @@ public class bhr extends ApplicationAdapter {
 		HP.dispose();
 		font.dispose();
 	}
+	public Animation<TextureRegion> flipAnimationHorizontally(Animation<TextureRegion> originalAnimation) {
+		Array<TextureRegion> flippedFrames = new Array<>();
+		for (TextureRegion frame : originalAnimation.getKeyFrames()) {
+			TextureRegion flippedFrame = new TextureRegion(frame);
+			flippedFrame.flip(true, false); // Flip horizontally
+			flippedFrames.add(flippedFrame);
+		}
+		return new Animation<>(originalAnimation.getFrameDuration(), flippedFrames, originalAnimation.getPlayMode());
+	}
+
 }
