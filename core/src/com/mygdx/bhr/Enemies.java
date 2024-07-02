@@ -10,7 +10,7 @@ public class Enemies implements hasHP {
     protected int ATTACK_DAMAGE = 10;
     protected boolean attack = false;
     protected final int WORLD_HEIGHT;
-    private int hp;
+    protected int hp;
     protected float stateTime;
     protected boolean doneCollision;
     protected float lastCollision;

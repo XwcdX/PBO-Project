@@ -10,6 +10,8 @@ public class Bomber_Enemy extends Enemies {
 
     public Bomber_Enemy(Polygon polygon, int worldWidth, int worldHeight) {
         super(polygon, worldWidth, worldHeight);
+        this.hp = 50;
+        super.ATTACK_DAMAGE = 20;
     }
 
     @Override

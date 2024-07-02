@@ -49,6 +49,8 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private boolean level3kamehameha;
     boolean shoot;
 
+    public Sound fireball_sfx;
+
     public Heroes(int worldWidth, int worldHeight, Camera camera, bhr game) {
         this.WORLD_WIDTH = worldWidth;
         this.WORLD_HEIGHT = worldHeight;
@@ -107,6 +109,10 @@ public class Heroes implements hasHP, canShoot, hasExp {
         return polygon;
     }
 
+    public void setHp(int hp) {
+        this.hp = hp;
+    }
+
     public void update(float deltaTime) {
         direction.set(0, 0);
 
@@ -129,6 +135,10 @@ public class Heroes implements hasHP, canShoot, hasExp {
         }
         if (TimeUtils.nanoTime() - lastAttackTime > attackInterval) {
             shoot();
+
+            fireball_sfx = Gdx.audio.newSound(Gdx.files.internal("fireball_sfx.mp3"));
+            fireball_sfx.play();
+
             lastAttackTime = TimeUtils.nanoTime();
         }
 
@@ -235,7 +245,7 @@ public class Heroes implements hasHP, canShoot, hasExp {
     private void levelUp() {
         level++;
         exp -= ExpNeeded;
-        ExpNeeded += 200;
+        ExpNeeded += 100;
         lvlUps.play();
     }
 
